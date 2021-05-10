@@ -1,5 +1,7 @@
 package com.eaProject.demo.controller;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,22 +14,20 @@ import com.eaProject.demo.domain.Appointment;
 import com.eaProject.demo.services.AppointmentService;
 
 @RestController
-@RequestMapping("/appointments")
-public class AppointmentController {
-
+@RequestMapping("/client")
+public class ClientController {
 	@Autowired
 	private AppointmentService appointmentService;
 
 	// endpoint for creating appointment by Orgil
-	@PostMapping
-	public Appointment createAppointment(@RequestBody Appointment appointment) {
+	@PostMapping("/appointments")
+	public Appointment createAppointment(@Valid @RequestBody Appointment appointment) {
 		return appointmentService.addAppointment(appointment);
 	}
 
 	// endpoint for deleting an appointment by Orgil
-	@DeleteMapping("/{id}")
+	@DeleteMapping("/appointments/{id}")
 	public void deleteAppointment(@PathVariable(name = "id") Long appointmentId) {
-		appointmentService.deleteAppointment(appointmentId);
+		appointmentService.deleteAppointmentClient(appointmentId);
 	}
-
 }
