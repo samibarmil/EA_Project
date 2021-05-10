@@ -14,11 +14,11 @@ import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+import lombok.*;
 import org.aspectj.apache.bcel.classfile.Module.Provide;
-
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 @Data
@@ -29,6 +29,7 @@ public class Session {
 	
 	@ManyToOne
 	@JoinColumn
+	@JsonIgnore
 	private Person provider;
 	
 	@Temporal(TemporalType.DATE)
@@ -40,6 +41,17 @@ public class Session {
 	
 	@OneToMany(mappedBy = "session")
 	private List<Appointment> appointments;
-	
 
+	@Override
+	public String toString() {
+		return "Session{" +
+				"id=" + id +
+				", provider=" + provider.getFirstName() + " " + provider.getLastName() +
+				", date=" + date +
+				", duration=" + duration +
+				", startTime=" + startTime +
+				", location='" + location + '\'' +
+				", appointments=" + appointments +
+				'}';
+	}
 }
