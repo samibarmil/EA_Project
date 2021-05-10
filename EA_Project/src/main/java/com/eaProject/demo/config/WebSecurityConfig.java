@@ -32,8 +32,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  implements 
         http.csrf().disable()
         .authorizeRequests()
                 .antMatchers("/auth/**").permitAll()
+                .antMatchers("/provider/**").hasAuthority(Role.PROVIDER.name())
+                .antMatchers("/client/**").hasAuthority(Role.ClIENT.name())
+                .antMatchers("/**").hasAuthority(Role.ADMIN.name())
                 .anyRequest()
-        .authenticated();
+        .authenticated()
+        .and()
+        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+        .sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 
     @Override
@@ -49,5 +56,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  implements 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Override
+    @Bean
+    public AuthenticationManager authenticationManager() throws Exception {
+        return super.authenticationManager();
     }
 }
