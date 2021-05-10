@@ -1,4 +1,9 @@
 spring:
+  mail:
+    host: smtp.mailtrap.io
+    port: 587
+    username: 494a573a5e3cc2
+    password: 8978744c57fb23
   application:
     name: EA_Project
   datasource:
