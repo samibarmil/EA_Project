@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.eaProject.demo.domain.Appointment;
 
 @Repository
-public interface AppoinmentRepository  extends JpaRepository<Appointment, Long> {
+public interface AppointmentRepository  extends JpaRepository<Appointment, Long> {
 
 }

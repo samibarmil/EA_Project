@@ -1,6 +1,4 @@
 package com.eaProject.demo.domain;
-import org.hibernate.annotations.ManyToAny;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 import lombok.Data;
 
@@ -12,7 +10,7 @@ import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
 @Entity
@@ -34,6 +32,7 @@ public class Person {
 	private Address address;
 	
 	@OneToMany
+	@JoinColumn(name="person_id")
 	private List<PersonRole> personRole;
 	
 	

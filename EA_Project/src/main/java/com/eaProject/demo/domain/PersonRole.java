@@ -1,6 +1,5 @@
 package com.eaProject.demo.domain;
 
-import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;

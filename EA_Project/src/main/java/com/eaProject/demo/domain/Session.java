@@ -1,7 +1,5 @@
 package com.eaProject.demo.domain;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
 
@@ -40,6 +38,7 @@ public class Session {
 	private String location;
 	
 	@OneToMany(mappedBy = "session")
+	@JsonIgnore
 	private List<Appointment> appointments;
 
 	@Override
