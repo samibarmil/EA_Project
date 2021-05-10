@@ -1,4 +1,5 @@
 package com.eaProject.demo.domain;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ManyToAny;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,7 +11,7 @@ import java.util.List;
 import javax.persistence.*;
 
 @Entity
-@Data
+@Data @NoArgsConstructor
 public class Person {
 
 	@Id @GeneratedValue
@@ -27,12 +28,15 @@ public class Person {
 	@Embedded
 	private Address address;
 	
-	@OneToMany
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinColumn(name="person_id")
 	private List<PersonRole> personRole;
-	
-	
-	
-	public Person() {}
 
+	public Person(String email, String firstName, String lastName, String username, String password) {
+		this.email = email;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.username = username;
+		this.password = password;
+	}
 }

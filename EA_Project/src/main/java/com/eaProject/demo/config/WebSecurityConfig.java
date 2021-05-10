@@ -1,9 +1,20 @@
 package com.eaProject.demo.config;
 
+import com.eaProject.demo.domain.Role;
+import com.eaProject.demo.filter.JWTAuthFilter;
+import com.eaProject.demo.services.PersonDetailService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -11,9 +22,23 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter  implements WebMvcConfigurer {
 
+    @Autowired
+    PersonDetailService personDetailService;
+    @Autowired
+    JWTAuthFilter jwtAuthFilter;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable();
+        http.csrf().disable()
+        .authorizeRequests()
+                .antMatchers("/auth/**").permitAll()
+                .anyRequest()
+        .authenticated();
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(personDetailService);
     }
 
     @Override
@@ -21,4 +46,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  implements 
         registry.addMapping("/**").allowedMethods("*");
     }
 
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }
