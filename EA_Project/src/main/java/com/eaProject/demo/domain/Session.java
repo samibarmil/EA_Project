@@ -13,10 +13,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import lombok.*;
-import org.aspectj.apache.bcel.classfile.Module.Provide;
 
 @Entity
 @Data
@@ -41,16 +38,16 @@ public class Session {
 	@JsonIgnore
 	private List<Appointment> appointments;
 
-	@Override
-	public String toString() {
-		return "Session{" +
-				"id=" + id +
-				", provider=" + provider.getFirstName() + " " + provider.getLastName() +
-				", date=" + date +
-				", duration=" + duration +
-				", startTime=" + startTime +
-				", location='" + location + '\'' +
-				", appointments=" + appointments +
-				'}';
-	}
+//	@Override
+//	public String toString() {
+//		return "Session{" +
+//				"id=" + id +
+//				", provider=" + provider.getFirstName() + " " + provider.getLastName() +
+//				", date=" + date +
+//				", duration=" + duration +
+//				", startTime=" + startTime +
+//				", location='" + location + '\'' +
+//				", appointments=" + appointments +
+//				'}';
+//	}
 }
