@@ -7,13 +7,7 @@ import lombok.Data;
 
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 
 @Entity
 @Data
@@ -34,6 +28,7 @@ public class Person {
 	private Address address;
 	
 	@OneToMany
+	@JoinColumn(name="person_id")
 	private List<PersonRole> personRole;
 	
 	
