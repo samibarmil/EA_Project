@@ -17,16 +17,16 @@ public class AppointmentController {
 
 	@Autowired
 	private AppointmentService appointmentService;
-	
+
 	// endpoint for creating appointment by Orgil
 	@PostMapping
 	public Appointment createAppointment(@RequestBody Appointment appointment) {
 		return appointmentService.addAppointment(appointment);
 	}
-	
+
 	// endpoint for deleting an appointment by Orgil
 	@DeleteMapping("/{id}")
-	public void deleteAppointment(@PathVariable(name="id") Long appointmentId){
+	public void deleteAppointment(@PathVariable(name = "id") Long appointmentId) {
 		appointmentService.deleteAppointment(appointmentId);
 	}
 
