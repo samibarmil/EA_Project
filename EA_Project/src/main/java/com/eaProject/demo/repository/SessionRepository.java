@@ -6,7 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import com.eaProject.demo.domain.Session;
 
+import java.util.List;
+
 @Repository
 public interface SessionRepository  extends JpaRepository<Session, Long> {
-    Session findByProvider(Person provider);
+    List<Session> findByProvider(Person provider);
 }
