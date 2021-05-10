@@ -12,6 +12,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Data;
 
 @Entity
@@ -23,6 +25,7 @@ public class Session {
 	
 	@ManyToOne
 	@JoinColumn
+	@JsonIgnore
 	private Person provider;
 	
 	@Temporal(TemporalType.DATE)
@@ -33,6 +36,7 @@ public class Session {
 	private String location;
 	
 	@OneToMany(mappedBy = "session")
+	@JsonIgnore
 	private List<Appointment> appointments;
 	
 

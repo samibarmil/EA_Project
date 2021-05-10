@@ -7,7 +7,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 
 import lombok.Data;
 
@@ -18,11 +17,12 @@ public class Appointment {
 	@Id @GeneratedValue
 	private Long id;
 	@Enumerated(EnumType.STRING)
-	private AppointmentStatus appointmentStatus;
+	private AppointmentStatus appointmentStatus = AppointmentStatus.REQUESTED;
 	@ManyToOne
 	@JoinColumn
 	private Person client;
 	@ManyToOne
 	@JoinColumn
 	private Session session;
+	
 }
