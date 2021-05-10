@@ -1,7 +1,5 @@
 package com.eaProject.demo.domain;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ManyToAny;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 import lombok.Data;
 
