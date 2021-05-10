@@ -2,10 +2,10 @@ spring:
   application:
     name: EA_Project
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=ea_project
-    username: sami
-    password: 12345
-    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:mysql://localhost:3306/ea_project
+    username: root
+    password: admin
+    driverClassName: com.mysql.jdbc.Driver
     hikari:
       maximumPoolSize: 10
   jpa:
@@ -17,7 +17,7 @@ spring:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.SQLServer2008Dialect
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
 logging:
   file:
     name: /Coding/Logging/${spring.application.name}/log
