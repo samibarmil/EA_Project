@@ -1,5 +1,6 @@
 package com.eaProject.demo.config;
 
+import com.eaProject.demo.domain.Address;
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.PersonRole;
 import com.eaProject.demo.domain.Role;
@@ -12,7 +13,7 @@ import org.springframework.context.event.EventListener;
 import java.util.Arrays;
 
 @Configuration
-public class DataSeeder {
+public class DataSeederConfig {
 
     @Autowired
     private PersonService personService;
@@ -20,6 +21,8 @@ public class DataSeeder {
     @EventListener
     public void seed (ContextRefreshedEvent event) {
         Person ADMIN = new Person("admin@gmail.com", "Admin", "Admin", "admin", "adminpass");
+        Address address = new Address("US", "Iowa", "Fairfield", "1000 Nth 8th St.", "52352");
+        ADMIN.setAddress(address);
         PersonRole[] personRoles = new PersonRole[] {new PersonRole(Role.ADMIN)};
         ADMIN.setPersonRole(Arrays.asList(personRoles));
         personService.addPerson(ADMIN);
