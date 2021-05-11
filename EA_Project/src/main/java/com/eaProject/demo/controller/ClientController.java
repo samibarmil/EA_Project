@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,7 +28,8 @@ public class ClientController {
 
 	// endpoint for deleting an appointment by Orgil
 	@DeleteMapping("/appointments/{id}")
-	public void deleteAppointment(@PathVariable(name = "id") Long appointmentId) {
+	public void deleteAppointment(@RequestHeader(value="User-Agent") String userAgent, @PathVariable(name = "id") Long appointmentId) {
+		
 		appointmentService.deleteAppointmentClient(appointmentId);
 	}
 }
