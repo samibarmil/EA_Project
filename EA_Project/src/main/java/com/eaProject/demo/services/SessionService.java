@@ -61,7 +61,7 @@ public class SessionService {
 
 	public void removeSessionFromProvider(Long sessionId, Person provider) throws Exception {
 		Session session = sessionRepository.findTopByIdAndProvider(sessionId, provider)
-				.orElseThrow(() -> new Exception("Session with id : %d is not found under given provider."));
+				.orElseThrow(() -> new Exception(String.format("Session with id : %d is not found under given provider.", sessionId)));
 		this.deleteSessionById(sessionId);
 	}
 
