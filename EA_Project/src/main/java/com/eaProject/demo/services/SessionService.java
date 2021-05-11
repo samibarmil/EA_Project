@@ -20,6 +20,10 @@ public class SessionService {
 		return sessionRepository.findAll();
 	}
 
+	public List<Session> getSessionsByProvider(Person provider) {
+		return sessionRepository.findByProvider(provider);
+	}
+
 	// Service for get Session by Id
 	public Optional<Session> getSessionById(long id){
 		return sessionRepository.findById(id);
@@ -32,7 +36,8 @@ public class SessionService {
 
 	// Service for add Session
 	public Session addSession(Session session) {
-		return sessionRepository.save(session);
+		sessionRepository.save(session);
+		return session;
 	}
 
 	// Service for deleting Session
@@ -41,20 +46,22 @@ public class SessionService {
 	}
 
 	// Service for editing Session
-	public Session editSession( Session editSession, long id){
-		return sessionRepository.findById(id)
-				.map(session -> {
-					session.setDate(editSession.getDate());
-					session.setDuration(editSession.getDuration());
-					session.setProvider(editSession.getProvider());
-					session.setLocation(editSession.getLocation());
-					session.setAppointments(editSession.getAppointments());
-					session.setStartTime(editSession.getStartTime());
-					return sessionRepository.save(session);
-				}).orElseGet(() -> {
-					editSession.setId(id);
-					return sessionRepository.save(editSession);
-				});
+	public Session editSession(Long sessionId, Session updatedSession) throws Exception {
+
+		if(!sessionId.equals(updatedSession.getId())) throw new Exception("Session id doen't match.");
+
+		Session session = sessionRepository.findById(sessionId)
+				.orElseThrow(() ->
+						new Exception(String.format("Session with id : %d not found", sessionId))
+				);
+		sessionRepository.save(updatedSession);
+		return updatedSession;
+	}
+
+	public void removeSessionFromProvider(Long sessionId, Person provider) throws Exception {
+		Session session = sessionRepository.findTopByIdAndProvider(sessionId, provider)
+				.orElseThrow(() -> new Exception("Session with id : %d is not found under given provider."));
+		this.deleteSessionById(sessionId);
 	}
 
 }

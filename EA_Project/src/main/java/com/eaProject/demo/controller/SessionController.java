@@ -35,8 +35,8 @@ public class SessionController {
     }
 
     @PutMapping("/edit/{id}")
-    Session editSession(@RequestBody Session editSession, @PathVariable long id){
-        return sessionService.editSession(editSession, id);
+    Session editSession(@RequestBody Session editSession, @PathVariable long id) throws Exception {
+        return sessionService.editSession(id, editSession);
     }
 
     @DeleteMapping("/delete/{id}")
