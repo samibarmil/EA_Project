@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,8 +20,12 @@ public class SessionService {
 	private SessionRepository sessionRepository;
 
 	// Service for get all Session
-	public List<Session> getAllSession(){
+	public List<Session> getAllSessions(){
 		return sessionRepository.findAll();
+	}
+
+	public List<Session> getAllFutureSessions(){
+		return sessionRepository.findFutureSessions().orElse(Collections.emptyList());
 	}
 
 	public List<Session> getSessionsByProvider(Person provider) {
