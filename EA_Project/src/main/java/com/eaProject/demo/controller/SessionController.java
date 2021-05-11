@@ -4,6 +4,8 @@ package com.eaProject.demo.controller;
 
 import com.eaProject.demo.domain.Session;
 import com.eaProject.demo.repository.SessionRepository;
+import com.eaProject.demo.services.SessionServices;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,44 +16,32 @@ import java.util.List;
 public class SessionController {
 
     @Autowired
-    SessionRepository sessionRepository;
+    private SessionServices sessionservices;
 
-    @GetMapping(produces = "application/json")
+    @GetMapping(path="/provider/sessions",produces = "application/json")
     List<Session> getAllSession(){
-        return sessionRepository.findAll();
+      return sessionservices.getAllSession();
     }
 
-    @PostMapping(path = "/addSession", produces = "application/json")
+    @PostMapping(path = "/provider/addSession", produces = "application/json")
     Session newSession(@RequestBody Session session){
-        return sessionRepository.save(session);
+        return sessionservices.newSession(session);
     }
 
-    // Single Item
-    @GetMapping(path = "/{id}", produces = "application/json")
-    Session getSession(@PathVariable long id) throws Exception {
-        return sessionRepository.findById(id)
-                .orElseThrow(() -> new Exception("Id not found"));
+//    // Single Item
+//    @GetMapping(path = "/provider/session/{id}", produces = "application/json")
+//    Session getSession(@PathVariable long id) throws Exception {
+//        return sessionservices.getSession(id)
+//                ;
+//    }
+
+    @PutMapping(path = "/provider/session/{id}")
+    Session editSession(@RequestBody Session editSession, @PathVariable long id) throws Exception{
+        return sessionservices.editSession(editSession, id);
     }
 
-    @PutMapping("/{id}")
-    Session editSession(@RequestBody Session editSession, @PathVariable long id){
-        return sessionRepository.findById(id)
-                .map(session -> {
-                    session.setDate(editSession.getDate());
-                    session.setDuration(editSession.getDuration());
-                    session.setProvider(editSession.getProvider());
-                    session.setLocation(editSession.getLocation());
-                    session.setAppointments(editSession.getAppointments());
-                    session.setStartTime(editSession.getStartTime());
-                    return sessionRepository.save(session);
-                }).orElseGet(() -> {
-                    editSession.setId(id);
-                    return sessionRepository.save(editSession);
-                });
-    }
-
-    @DeleteMapping("/{id}")
-    void deleteSession(@PathVariable long id){
-        sessionRepository.deleteById(id);
+    @DeleteMapping("/provider/deletesession{id}")
+    void deleteSession(@PathVariable long id) throws Exception{
+    	sessionservices.deleteSession(id);
     }
 }
