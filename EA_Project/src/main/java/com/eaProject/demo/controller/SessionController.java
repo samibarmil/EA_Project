@@ -17,7 +17,7 @@ public class SessionController {
 
 	@GetMapping
 	List<Session> allSession() {
-		return sessionService.getAllSession();
+		return sessionService.getAllSessions();
 	}
 
 	@PostMapping(path = "/add")

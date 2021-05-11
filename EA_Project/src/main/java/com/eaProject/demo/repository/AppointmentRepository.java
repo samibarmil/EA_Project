@@ -19,6 +19,8 @@ import com.eaProject.demo.domain.Appointment;
 public interface AppointmentRepository  extends JpaRepository<Appointment, Long> {
 	 public List<Appointment> findAllByOrderByIdAsc();
 	 public Optional<List<Appointment>> findByClient(Person client);
+	 public Optional<Appointment> findTopByIdAndClient(Long id, Person client);
 	 @Query("SELECT a FROM Appointment a WHERE a.session.id = :sessionId AND a.client.id = :clientId")
-	 public Optional<Appointment> findTopBySessionAndClient(@Param("sessionId") Long sessionId, @Param("clientId") Long clientId);
+	 public Optional<Appointment> findTopBySessionAndClient(@Param("sessionId") Long sessionId,
+															@Param("clientId") Long clientId);
 }
