@@ -29,6 +29,12 @@ public class ClientController {
 			return ResponseEntity.ok(sessionService.getAllFutureSessions());
 		return ResponseEntity.ok(sessionService.getAllSessions());
 	}
+
+	@GetMapping("/sessions/{id}")
+	public ResponseEntity<?> getSession(@PathVariable Long id) {
+		return ResponseEntity.ok(sessionService.getSessionById(id));
+	}
+
 	// endpoint for creating appointment by Orgil
 	@PostMapping("/sessions/{id}/appointments")
 	public ResponseEntity<?> createAppointment(@PathVariable Long id) {
@@ -81,5 +87,13 @@ public class ClientController {
 	public ResponseEntity<?> GetAll() throws Exception {
 		Person currentPerson = personService.getCurrentUser();
 		return ResponseEntity.ok(appointmentService.getClientAppointments(currentPerson));
+	}
+
+	// appointment of client
+	@GetMapping(path="/appointments/{id}",produces = "application/json; charset=UTF-8")
+	@ResponseBody
+	public ResponseEntity<?> getAppointment(@PathVariable Long id) {
+		Person currentPerson = personService.getCurrentUser();
+		return ResponseEntity.ok(appointmentService.getClientAppointment(id, currentPerson));
 	}
 }
