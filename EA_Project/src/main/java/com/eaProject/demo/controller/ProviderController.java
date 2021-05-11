@@ -44,6 +44,13 @@ public class ProviderController {
 	}
 
 	// Todo: [GET] /sessions/{id}
+	@GetMapping("/sessions/{id}")
+	ResponseEntity<?> getSession(@PathVariable Long id) {
+		Session session = sessionService.getSessionById(id).orElse(null);
+		if(session == null)
+			ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("Session with id : %d not found", id));
+		return ResponseEntity.ok(session);
+	}
 
 	@DeleteMapping("/sessions/{id}")
 	ResponseEntity<?> deleteSession(@PathVariable Long id) {
@@ -56,7 +63,6 @@ public class ProviderController {
 		}
 	}
 
-	// Todo: [GET] /sessions/{id}/appointments
 	@GetMapping("/sessions/{id}/appointments")
 	ResponseEntity<?> getSessionAppointments(@PathVariable Long id) {
 		Person currentUser = personService.getCurrentUser();
@@ -68,6 +74,7 @@ public class ProviderController {
 	}
 
 	// Todo: [GET] /appointments/{id}
+
 }
 
 
