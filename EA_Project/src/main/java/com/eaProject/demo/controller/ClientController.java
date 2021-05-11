@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.validation.Valid;
 
+import com.eaProject.demo.domain.AppointmentStatus;
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
 import com.eaProject.demo.services.PersonService;
@@ -49,6 +50,8 @@ public class ClientController {
 		if (session == null)
 			return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("Session with id : %d not found!", id));
 
+		// Todo: if session is in the past return error
+
 		Appointment appointment = appointmentService.addAppointment(new Appointment(session, currentUser));
 		appointment.getClient().setPassword(null);
 
@@ -61,9 +64,23 @@ public class ClientController {
 		appointmentService.deleteAppointmentClient(appointmentId);
 	}
 	
-	@PutMapping("/client/appointments/{id}")
-    public Appointment update(@PathVariable(value = "id") Long id,@Valid @RequestBody Appointment appointment) throws Exception{
-        return appointmentService.updatefromclient(id,appointment);
+	@PutMapping("/appointments/{id}/cancel")
+    public ResponseEntity<?> update(@PathVariable(value = "id") Long id) throws Exception{
+
+		Person currentUser = personService.getCurrentUser();
+		Appointment appointment = appointmentService.getAppointment(id);
+
+		// check if the appointment belongs to the user
+		if(!appointmentService.isOwnerOfAppointment(currentUser, appointment))
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You do not have right to cancel");
+
+		//  Appointments can be cancelled or modified up to 48 hours before the session
+		if(!sessionService.isSessionInFuture(appointment.getSession()))
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not update appointments of passed sessions.");
+		appointment.setAppointmentStatus(AppointmentStatus.CANCELED);
+
+		// Todo : Send an email (to the creator of appointment, counselor and customer)
+		return ResponseEntity.ok(appointmentService.updatefromclient(id,appointment));
     }
 
 	// All appointments requested by the client

@@ -1,5 +1,6 @@
 package com.eaProject.demo.services;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -137,5 +138,18 @@ public class AppointmentService {
 				.findTopBySessionAndClient(sessionId, client.getId())
 				.orElse(null);
 		return appointment == null;
+	}
+
+	public Boolean isOwnerOfAppointment(Person client, Appointment appointment) {
+
+		return  client.getUsername().equals(appointment.getClient().getUsername());
+	}
+
+	public Appointment getAppointment(Long appointmentId) throws Exception {
+		Appointment appointment = appointmentRepository.findById(appointmentId)
+				.orElse(null);
+		if(appointment == null)
+			throw new Exception(String.format("Appointment with id : %d not found", appointmentId));
+		return appointment;
 	}
 }
