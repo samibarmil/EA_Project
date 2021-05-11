@@ -58,8 +58,19 @@ public class ClientController {
 
 	// endpoint for deleting an appointment by Orgil
 	@DeleteMapping("/appointments/{id}")
-	public void deleteAppointment(@RequestHeader(value="User-Agent") String userAgent, @PathVariable(name = "id") Long appointmentId) {
+	public ResponseEntity<?> deleteAppointment(@RequestHeader(value="User-Agent") String userAgent,
+								  @PathVariable(name = "id") Long appointmentId) {
+		Person currentUser = personService.getCurrentUser();
+		Appointment appointment = null;
+		try {
+			appointment = appointmentService.getAppointment(appointmentId);
+		} catch (Exception exception) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+		}
+
+		if (!appointmentService.isOwnerOfAppointment(currentUser, appointment))
 		appointmentService.deleteAppointmentClient(appointmentId);
+		return ResponseEntity.ok("count : 1");
 	}
 	
 	@PutMapping("/appointments/{id}/cancel")
