@@ -82,6 +82,15 @@ public class SessionService {
 
 		return session.getAppointments();
 	}
+	
+	
+	//For admin use only
+	public List<Appointment> getSessionAppointments(Long id) throws Exception {
+		Session session = sessionRepository.findById(id)
+				.orElseThrow(() -> new Exception(String.format("Session with id : %d not found", id)));
+
+		return session.getAppointments();
+	}
 
 	public Boolean doesSessionBelongsToProvider(Long sessionId, Person provider) {
 		Session session = sessionRepository.findTopByIdAndProvider(sessionId, provider)

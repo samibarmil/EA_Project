@@ -6,7 +6,9 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
 import com.eaProject.demo.config.EmailConfig;
+import com.eaProject.demo.domain.Appointment;
 import com.eaProject.demo.domain.Person;
+import com.eaProject.demo.domain.Session;
 
 import lombok.Data;
 
@@ -37,7 +39,7 @@ public class EmailService {
 	/**
 	 * <h1>Send an email for session changes</h1>
 	 * @param admin Person object which the email will be sent to.
-	 * @param action past tense verb (created, updated or canceled).
+	 * @param action ENUM of type NotificationAction (CREATED, UPDATED, DELETED or canceled).
 	 * @param entity the name of the touched class
 	 */
 	public void EmailNotification(Person admin, NotificationAction action, String entity) {
@@ -46,6 +48,38 @@ public class EmailService {
 		mailSender.send(mail);	
 	}
 	
+	/**
+	 * <h1>Send an email for session changes</h1>
+	 * @param admin Person object which the email will be sent to.
+	 * @param action ENUM of type NotificationAction (CREATED, UPDATED, DELETED or canceled).
+	 * @param entity that has been touched
+	 */
+	public void DomainEmailNotification(Person person, NotificationAction action, Object entity) {
+		mail.setTo(person.getEmail());
+
+		String entityType = "", entityData = "";
+		switch (entity.getClass().getSimpleName()) {
+		case "Session":
+			entityType = "Session";
+			entityData = ((Session) entity).toString();
+			break;
+		case "Appointment":
+			entityType = "Appointment";
+			entityData = ((Appointment) entity).toString();
+			break;
+		case "Person":
+			entityType = "Person";
+			entityData = ((Person) entity).toString();
+			break;
+		default:
+			throw new IllegalArgumentException();
+
+		}
+
+		mail.setText(entityType + " has been " + action.toString() + " successfuly\n" + entityData);
+
+		mailSender.send(mail);
+	}
 
 	/**
 	 * <h1>Send a custom email notification</h1>

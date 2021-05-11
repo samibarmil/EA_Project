@@ -1,7 +1,11 @@
 package com.eaProject.demo.services;
 
 import com.eaProject.demo.domain.Person;
+import com.eaProject.demo.domain.Session;
 import com.eaProject.demo.repository.PersonRepository;
+
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -49,4 +53,25 @@ public class PersonService {
                 .orElse(null);
         return personByUsername == null;
     }
+    
+    public Person getPersonById(Long id){
+    	return personRepository.findById(id).orElse(null);
+    }
+    
+    public Collection<Person> getAllPersons(){
+    	return personRepository.findAll();
+    }
+    
+    public Person updatePerson(Long id, Person person) throws Exception {
+
+		if(!id.equals(person.getId())) throw new Exception("Session id dose not match.");
+
+		Person p = personRepository.findById(id)
+				.orElseThrow(() ->
+						new Exception(String.format("Session with id : %d not found", id))
+				);
+		personRepository.save(person);
+		return person;
+    }
+    
 }

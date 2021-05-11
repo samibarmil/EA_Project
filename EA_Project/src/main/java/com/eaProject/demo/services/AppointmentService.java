@@ -35,7 +35,6 @@ public class AppointmentService {
 		Person client = appointment.getClient();
 		Session session = sessionRepository.getOne(sessId);
 		if (session.getDate().compareTo(new Date()) > 0) {
-			emailService.EmailNotification(client , NotificationAction.CREATED, "Appointment");
 			return appointmentRepository.save(appointment);
 		} else {
 			throw new RuntimeException("Appointment not in the future");
@@ -77,6 +76,7 @@ public class AppointmentService {
 				nextAppointment.setAppointmentStatus(AppointmentStatus.APPROVED);
 				appointmentRepository.save(appointment);
 			}
+      
 		}else {
 			throw  new ResourceNotFoundException("Appointment with that id doesn't exist", "id=",id);
 		}
@@ -88,7 +88,6 @@ public class AppointmentService {
 	public void deleteAppointmentAdmin(Long id) {
 		Person admin = appointmentRepository.getOne(id).getClient();
 		appointmentRepository.deleteById(id);
-		emailService.EmailNotification(admin, NotificationAction.CANCELED, "Appointment");
 	}
 	
 	public Appointment updatefromclient(Long id,@Valid Appointment appointment) throws Exception {
