@@ -3,7 +3,6 @@ package com.eaProject.demo.controller;
 import com.eaProject.demo.domain.AppointmentStatus;
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
-import com.eaProject.demo.exceptions.ResourceNotFoundException;
 import com.eaProject.demo.services.PersonService;
 import com.eaProject.demo.services.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.eaProject.demo.domain.Appointment;
 import com.eaProject.demo.services.AppointmentService;
+import com.eaProject.demo.services.EmailService;
+import com.eaProject.demo.services.NotificationAction;
 
 @RestController
 @RequestMapping("/client")
@@ -23,6 +24,8 @@ public class ClientController {
 	private PersonService personService;
 	@Autowired
 	private SessionService sessionService;
+	@Autowired
+	private EmailService emailService;
 
 	@GetMapping("/sessions")
 	public ResponseEntity<?> getSessions(@RequestParam Boolean futureOnly) {
@@ -55,9 +58,8 @@ public class ClientController {
 		} catch (RuntimeException e) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Appointment sessions is not in the future.");
 		}
-
+		emailService.EmailNotification(currentUser , NotificationAction.CREATED, "Appointment");
 		appointment.getClient().setPassword(null);
-
 		return ResponseEntity.ok(appointment);
 	}
 
@@ -75,6 +77,7 @@ public class ClientController {
 
 		if (!appointmentService.isOwnerOfAppointment(currentUser, appointment))
 		appointmentService.deleteAppointmentClient(appointmentId);
+		emailService.EmailNotification(currentUser , NotificationAction.DELETED, "Appointment");
 		return ResponseEntity.ok("count : 1");
 	}
 
@@ -94,7 +97,7 @@ public class ClientController {
 					.body("Can not update appointments of passed sessions.");
 		appointment.setAppointmentStatus(AppointmentStatus.CANCELED);
 
-		// Todo : Send an email (to the creator of appointment, counselor and customer)
+		emailService.EmailNotification(currentUser, NotificationAction.UPDATED, "Appointment");
 		return ResponseEntity.ok(appointmentService.updatefromclient(id, appointment));
 	}
 

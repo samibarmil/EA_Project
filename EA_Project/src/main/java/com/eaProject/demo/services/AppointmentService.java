@@ -1,6 +1,5 @@
 package com.eaProject.demo.services;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -25,17 +24,12 @@ public class AppointmentService {
 
 	@Autowired
 	private SessionRepository sessionRepository;
-	
-	@Autowired
-	private EmailService emailService;
 
 	// Service for adding an appointment by Orgil
 	public Appointment addAppointment(Appointment appointment) {
 		long sessId = appointment.getSession().getId();
-		Person client = appointment.getClient();
 		Session session = sessionRepository.getOne(sessId);
 		if (session.getDate().compareTo(new Date()) > 0) {
-			emailService.EmailNotification(client , NotificationAction.CREATED, "Appointment");
 			return appointmentRepository.save(appointment);
 		} else {
 			throw new RuntimeException("Appointment not in the future");
@@ -48,7 +42,6 @@ public class AppointmentService {
 		
 		if(appointmentRepository.getOne(id)!=null) {
 			Appointment appointment = appointmentRepository.getOne(id);
-			Person client = appointment.getClient();
 			
 			// check if cancelling appointment was approved or not
 			if(appointment.getAppointmentStatus()==AppointmentStatus.APPROVED) {
@@ -63,7 +56,6 @@ public class AppointmentService {
 			// if session is in more than 48 hours, cancel
 			if (diff > 48) {
 				appointmentRepository.deleteById(id);
-				emailService.EmailNotification(client, NotificationAction.CANCELED, "Appointment");
 			} else {
 				throw new RuntimeException("Less than 48 hours");
 			}
@@ -86,9 +78,13 @@ public class AppointmentService {
 
 	// Service for deleting an appointment for Admin by Orgil
 	public void deleteAppointmentAdmin(Long id) {
-		Person admin = appointmentRepository.getOne(id).getClient();
-		appointmentRepository.deleteById(id);
-		emailService.EmailNotification(admin, NotificationAction.CANCELED, "Appointment");
+		Appointment appointment = appointmentRepository.getOne(id);
+		if(appointment!=null) {
+			appointmentRepository.deleteById(id);
+		}else {
+			throw  new ResourceNotFoundException("Appointment with that id doesn't exist", "id=",id);
+		}
+		
 	}
 	
 	public Appointment updatefromclient(Long id,@Valid Appointment appointment) throws Exception {
