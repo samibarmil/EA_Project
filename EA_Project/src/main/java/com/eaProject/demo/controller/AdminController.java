@@ -5,6 +5,7 @@ import com.eaProject.demo.domain.PersonRole;
 import com.eaProject.demo.domain.Role;
 import com.eaProject.demo.services.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,10 +22,15 @@ public class AdminController {
     PersonService personService;
 
     @RequestMapping("/add-provider")
-    public ResponseEntity<Person> addProvider(@RequestBody Person person) {
+    public ResponseEntity<?> addProvider(@RequestBody Person person) {
         PersonRole[] personRoles = new PersonRole[] {new PersonRole(Role.PROVIDER)};
         person.setPersonRole(Arrays.asList(personRoles));
-        Person personWithId = personService.addPerson(person);
+        Person personWithId = null;
+        try {
+            personWithId = personService.addPerson(person);
+        } catch (Exception exception) {
+          return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exception.getMessage());
+        }
         personWithId.setPassword(null);
         return ResponseEntity.ok(personWithId);
     }

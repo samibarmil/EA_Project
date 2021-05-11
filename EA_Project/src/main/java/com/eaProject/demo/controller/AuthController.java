@@ -5,6 +5,7 @@ import com.eaProject.demo.services.PersonDetailService;
 import com.eaProject.demo.services.PersonService;
 import com.eaProject.demo.util.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -51,10 +52,15 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<Person> signup(@RequestBody Person person) {
+    public ResponseEntity<?> signup(@RequestBody Person person) {
         PersonRole[] personRoles = new PersonRole[] {new PersonRole(Role.CLIENT)};
         person.setPersonRole(Arrays.asList(personRoles));
-        Person personWithId = personService.addPerson(person);
+        Person personWithId = null;
+        try {
+            personWithId = personService.addPerson(person);
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exception.getMessage());
+        }
         personWithId.setPassword(null);
         return ResponseEntity.ok(personWithId);
     }
