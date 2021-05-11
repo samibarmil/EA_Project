@@ -1,8 +1,8 @@
 package com.eaProject.demo.controller;
 
-import com.eaProject.demo.domain.AuthenticationRequest;
-import com.eaProject.demo.domain.AuthenticationResponse;
+import com.eaProject.demo.domain.*;
 import com.eaProject.demo.services.PersonDetailService;
+import com.eaProject.demo.services.PersonService;
 import com.eaProject.demo.util.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.RequestEntity;
@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -26,6 +28,8 @@ public class AuthController {
     PersonDetailService personDetailService;
     @Autowired
     JWTUtil jwtUtil;
+    @Autowired
+    PersonService personService;
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
@@ -44,5 +48,14 @@ public class AuthController {
         String jwt =  jwtUtil.generateUserToke(userDetails);
 
         return ResponseEntity.ok(new AuthenticationResponse(jwt));
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<Person> signup(@RequestBody Person person) {
+        PersonRole[] personRoles = new PersonRole[] {new PersonRole(Role.CLIENT)};
+        person.setPersonRole(Arrays.asList(personRoles));
+        Person personWithId = personService.addPerson(person);
+        personWithId.setPassword(null);
+        return ResponseEntity.ok(personWithId);
     }
 }
