@@ -7,6 +7,7 @@ import com.eaProject.demo.repository.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,7 +62,7 @@ public class SessionService {
 
 	public void removeSessionFromProvider(Long sessionId, Person provider) throws Exception {
 		Session session = sessionRepository.findTopByIdAndProvider(sessionId, provider)
-				.orElseThrow(() -> new Exception("Session with id : %d is not found under given provider."));
+				.orElseThrow(() -> new Exception(String.format("Session with id : %d is not found under given provider.", sessionId)));
 		this.deleteSessionById(sessionId);
 	}
 
@@ -80,5 +81,9 @@ public class SessionService {
 		Session session = sessionRepository.findTopByIdAndProvider(sessionId, provider)
 				.orElse(null);
 		return session != null;
+	}
+
+	public Boolean isSessionInFuture(Session session) {
+		return  session.getDate().after(java.sql.Date.valueOf(LocalDate.now().plusDays(2)));
 	}
 }
