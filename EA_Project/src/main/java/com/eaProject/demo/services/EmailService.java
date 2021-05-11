@@ -4,13 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.eaProject.demo.config.EmailConfig;
 import com.eaProject.demo.domain.Person;
-import com.eaProject.demo.domain.Session;
 
 import lombok.Data;
 
