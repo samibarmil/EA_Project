@@ -1,9 +1,5 @@
 package com.eaProject.demo.controller;
 
-import java.util.List;
-
-import javax.validation.Valid;
-
 import com.eaProject.demo.domain.AppointmentStatus;
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
@@ -12,16 +8,7 @@ import com.eaProject.demo.services.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.eaProject.demo.domain.Appointment;
 import com.eaProject.demo.services.AppointmentService;
@@ -35,6 +22,18 @@ public class ClientController {
 	private PersonService personService;
 	@Autowired
 	private SessionService sessionService;
+
+	@GetMapping("/sessions")
+	public ResponseEntity<?> getSessions(@RequestParam Boolean futureOnly) {
+		if(futureOnly)
+			return ResponseEntity.ok(sessionService.getAllFutureSessions());
+		return ResponseEntity.ok(sessionService.getAllSessions());
+	}
+
+	@GetMapping("/sessions/{id}")
+	public ResponseEntity<?> getSession(@PathVariable Long id) {
+		return ResponseEntity.ok(sessionService.getSessionById(id));
+	}
 
 	// endpoint for creating appointment by Orgil
 	@PostMapping("/sessions/{id}/appointments")
@@ -59,8 +58,19 @@ public class ClientController {
 
 	// endpoint for deleting an appointment by Orgil
 	@DeleteMapping("/appointments/{id}")
-	public void deleteAppointment(@RequestHeader(value="User-Agent") String userAgent, @PathVariable(name = "id") Long appointmentId) {
+	public ResponseEntity<?> deleteAppointment(@RequestHeader(value="User-Agent") String userAgent,
+								  @PathVariable(name = "id") Long appointmentId) {
+		Person currentUser = personService.getCurrentUser();
+		Appointment appointment = null;
+		try {
+			appointment = appointmentService.getAppointment(appointmentId);
+		} catch (Exception exception) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+		}
+
+		if (!appointmentService.isOwnerOfAppointment(currentUser, appointment))
 		appointmentService.deleteAppointmentClient(appointmentId);
+		return ResponseEntity.ok("count : 1");
 	}
 	
 	@PutMapping("/appointments/{id}/cancel")
@@ -88,5 +98,13 @@ public class ClientController {
 	public ResponseEntity<?> GetAll() throws Exception {
 		Person currentPerson = personService.getCurrentUser();
 		return ResponseEntity.ok(appointmentService.getClientAppointments(currentPerson));
+	}
+
+	// appointment of client
+	@GetMapping(path="/appointments/{id}",produces = "application/json; charset=UTF-8")
+	@ResponseBody
+	public ResponseEntity<?> getAppointment(@PathVariable Long id) {
+		Person currentPerson = personService.getCurrentUser();
+		return ResponseEntity.ok(appointmentService.getClientAppointment(id, currentPerson));
 	}
 }

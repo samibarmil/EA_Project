@@ -141,6 +141,11 @@ public class AppointmentService {
 				.orElse(Collections.emptyList());
 	}
 
+	public Appointment getClientAppointment(Long appointmentId, Person client) {
+		return appointmentRepository.findTopByIdAndClient(appointmentId, client)
+				.orElse(null);
+	}
+
 	public Boolean isFirstAppointmentOfSession(Long sessionId, Person client) {
 		Appointment appointment = appointmentRepository
 				.findTopBySessionAndClient(sessionId, client.getId())
