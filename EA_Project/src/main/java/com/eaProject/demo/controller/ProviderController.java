@@ -1,6 +1,8 @@
 package com.eaProject.demo.controller;
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
+import com.eaProject.demo.services.EmailService;
+import com.eaProject.demo.services.NotificationAction;
 import com.eaProject.demo.services.PersonService;
 import com.eaProject.demo.services.SessionService;
 
@@ -18,6 +20,8 @@ public class ProviderController {
 	private PersonService personService;
 	@Autowired
 	private SessionService sessionService;
+	@Autowired
+	private EmailService emailservice;
 
 	@GetMapping(path="/sessions", produces = "application/json")
 	public ResponseEntity<?> getSessions() { // Todo: ?futureOnly=true
@@ -30,6 +34,7 @@ public class ProviderController {
 	ResponseEntity<?> addSession(@RequestBody Session session){
 		Person currentUser = personService.getCurrentUser();
 		session.setProvider(currentUser);
+		emailservice.DomainEmailNotification(currentUser, NotificationAction.CREATED, session);
 		return ResponseEntity.ok(sessionService.addSession(session));
 	}
 
@@ -40,7 +45,9 @@ public class ProviderController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You have no access to this session.");
 		try {
 			// Todo: check if the provider owns the session
-			return ResponseEntity.ok(sessionService.editSession(id, session));
+			Session edited_session = sessionService.editSession(id, session);
+			emailservice.DomainEmailNotification(currentUse, NotificationAction.UPDATED, edited_session);
+			return ResponseEntity.ok(edited_session);
 		} catch (Exception exception) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
 		}
@@ -68,6 +75,7 @@ public class ProviderController {
 		try {
 			Person currentUser = personService.getCurrentUser();
 			sessionService.removeSessionFromProvider(id, currentUser);
+			emailservice.DomainEmailNotification(currentUser, NotificationAction.DELETED, sessionService.getSessionById(id));
 			return ResponseEntity.ok("count : 1");
 		} catch (Exception exception) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());

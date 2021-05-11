@@ -19,16 +19,20 @@ import org.springframework.web.bind.annotation.RestController;
 import com.eaProject.demo.domain.Appointment;
 import com.eaProject.demo.exceptions.ResourceNotFoundException;
 import com.eaProject.demo.services.AppointmentService;
+import com.eaProject.demo.services.EmailService;
+import com.eaProject.demo.services.NotificationAction;
 
 @RestController
 @RequestMapping("/client")
 public class ClientController {
 	@Autowired
 	private AppointmentService appointmentService;
-
+	@Autowired
+	EmailService emailservice;
 	// endpoint for creating appointment by Orgil
 	@PostMapping("/appointments")
 	public Appointment createAppointment(@Valid @RequestBody Appointment appointment) {
+		//emailservice.DomainEmailNotification(currentUser, NotificationAction.DELETED, sessionService.getSessionById(id));
 		return appointmentService.addAppointment(appointment);
 	}
 
