@@ -1,8 +1,6 @@
 package com.eaProject.demo.services;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.Valid;
@@ -84,7 +82,6 @@ public class AppointmentService {
 		emailService.EmailNotification(admin, NotificationAction.CANCELED, "Appointment");
 	}
 	
-	
 	public Appointment updatefromclient(Long id,@Valid Appointment appointment) throws Exception {
 		if(appointmentRepository.getOne(id)!=null) {
 			Date getsessiondate = appointmentRepository.getOne(id).getSession().getDate();
@@ -111,7 +108,7 @@ public class AppointmentService {
 	    
 	}
 
-		public Appointment updatefromadmin(Long id,@Valid Appointment appointment) throws Exception {
+	public Appointment updatefromadmin(Long id,@Valid Appointment appointment) throws Exception {
 
 			Appointment appointments=  appointmentRepository.findById(id)
 					.orElseThrow(() -> new ResourceNotFoundException("Appointment with that id doesn't exist", "id",id));
@@ -125,14 +122,20 @@ public class AppointmentService {
 		    return appointmentupdated;
 	}
 		
-		public List<Appointment> GetAllClient() {
+	public List<Appointment> GetAllAdmin() {
 			List<Appointment> list = appointmentRepository.findAll();
 			return list;
-		}
-		
-		public List<Appointment> GetAllAdmin() {
-			List<Appointment> list = appointmentRepository.findAll();
-			return list;
-		}
-	
+	}
+
+	public List<Appointment> getClientAppointments(Person client) {
+		return appointmentRepository.findByClient(client)
+				.orElse(Collections.emptyList());
+	}
+
+	public Boolean isFirstAppointmentOfSession(Long sessionId, Person client) {
+		Appointment appointment = appointmentRepository
+				.findTopBySessionAndClient(sessionId, client.getId())
+				.orElse(null);
+		return appointment == null;
+	}
 }
