@@ -1,4 +1,5 @@
 package com.eaProject.demo.domain;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.NoArgsConstructor;
 
 import lombok.Data;
@@ -34,6 +35,7 @@ public class Person {
 	@NotNull
 	@Size(min =6,max=30)
 	private String username;
+	@JsonIgnore
 	@NotEmpty
 	@NotNull
 	@Size(min =6,max=30)

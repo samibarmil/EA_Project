@@ -68,6 +68,8 @@ public class Appointment {
 	}
 
 	
-	
-	
+	public Appointment(Session session, Person client) {
+		this.session = session;
+		this.client = client;
+	}
 }

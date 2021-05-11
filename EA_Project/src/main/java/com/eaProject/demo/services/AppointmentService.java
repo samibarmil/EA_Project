@@ -1,8 +1,7 @@
 package com.eaProject.demo.services;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.Valid;
@@ -46,33 +45,43 @@ public class AppointmentService {
 	public void deleteAppointmentClient(Long id) {
 		boolean hasApprovedAppointment = false;
 		
-		Appointment appointment = appointmentRepository.getOne(id);
-		Person client = appointment.getClient();
+		if(appointmentRepository.getOne(id)!=null) {
+			Appointment appointment = appointmentRepository.getOne(id);
+			Person client = appointment.getClient();
+			
+			// check if cancelling appointment was approved or not
+			if(appointment.getAppointmentStatus()==AppointmentStatus.APPROVED) {
+				hasApprovedAppointment = true;
+			}
+			
+			// calculate how much time left until session
+			Date sessionDate = appointment.getSession().getDate();
+			long diffInMillies = Math.abs(sessionDate.getTime() - new Date().getTime());
+			long diff = TimeUnit.HOURS.convert(diffInMillies, TimeUnit.MILLISECONDS);
 
-		// check there are APPROVED appointments
-		if(appointment.getAppointmentStatus()==AppointmentStatus.APPROVED) {
-			hasApprovedAppointment = true;
-		}
-		Date sessionDate = appointment.getSession().getDate();
-		long diffInMillies = Math.abs(sessionDate.getTime() - new Date().getTime());
-		long diff = TimeUnit.HOURS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+			// if session is in more than 48 hours, cancel
+			if (diff > 48) {
+				appointmentRepository.deleteById(id);
+				emailService.EmailNotification(client, NotificationAction.CANCELED, "Appointment");
+			} else {
+				throw new RuntimeException("Less than 48 hours");
+			}
+			
+			List<Appointment> appointments = new ArrayList<>();
+			appointments = appointmentRepository.findAllByOrderByIdAsc();
 
-		// if session is later than 48 hours, cancel
-		if (diff > 48) {
-			appointmentRepository.deleteById(id);
-		} else {
-			throw new RuntimeException("Less than 48 hours");
+			//if deleted appointment was approved then make next appointment approved (Orgil)
+			if(hasApprovedAppointment && appointments!=null) {
+				Appointment nextAppointment = appointments.get(0);
+				nextAppointment.setAppointmentStatus(AppointmentStatus.APPROVED);
+				appointmentRepository.save(appointment);
+			}
+      
+		}else {
+			throw  new ResourceNotFoundException("Appointment with that id doesn't exist", "id=",id);
 		}
 		
-		List<Appointment> appointments = new ArrayList<>();
-		appointments = appointmentRepository.findAllByOrderByIdAsc();
 
-		//if deleted appointment was approved then make next appointment approved (Orgil)
-		if(hasApprovedAppointment && appointments!=null) {
-			Appointment nextAppointment = appointments.get(0);
-			nextAppointment.setAppointmentStatus(AppointmentStatus.APPROVED);
-			appointmentRepository.save(appointment);
-		}
 	}
 
 	// Service for deleting an appointment for Admin by Orgil
@@ -80,7 +89,6 @@ public class AppointmentService {
 		Person admin = appointmentRepository.getOne(id).getClient();
 		appointmentRepository.deleteById(id);
 	}
-	
 	
 	public Appointment updatefromclient(Long id,@Valid Appointment appointment) throws Exception {
 		if(appointmentRepository.getOne(id)!=null) {
@@ -108,7 +116,7 @@ public class AppointmentService {
 	    
 	}
 
-		public Appointment updatefromadmin(Long id,@Valid Appointment appointment) throws Exception {
+	public Appointment updatefromadmin(Long id,@Valid Appointment appointment) throws Exception {
 
 			Appointment appointments=  appointmentRepository.findById(id)
 					.orElseThrow(() -> new ResourceNotFoundException("Appointment with that id doesn't exist", "id",id));
@@ -122,14 +130,38 @@ public class AppointmentService {
 		    return appointmentupdated;
 	}
 		
-		public List<Appointment> GetAllClient() {
+	public List<Appointment> GetAllAdmin() {
 			List<Appointment> list = appointmentRepository.findAll();
 			return list;
-		}
-		
-		public List<Appointment> GetAllAdmin() {
-			List<Appointment> list = appointmentRepository.findAll();
-			return list;
-		}
-	
+	}
+
+	public List<Appointment> getClientAppointments(Person client) {
+		return appointmentRepository.findByClient(client)
+				.orElse(Collections.emptyList());
+	}
+
+	public Appointment getClientAppointment(Long appointmentId, Person client) {
+		return appointmentRepository.findTopByIdAndClient(appointmentId, client)
+				.orElse(null);
+	}
+
+	public Boolean isFirstAppointmentOfSession(Long sessionId, Person client) {
+		Appointment appointment = appointmentRepository
+				.findTopBySessionAndClient(sessionId, client.getId())
+				.orElse(null);
+		return appointment == null;
+	}
+
+	public Boolean isOwnerOfAppointment(Person client, Appointment appointment) {
+
+		return  client.getUsername().equals(appointment.getClient().getUsername());
+	}
+
+	public Appointment getAppointment(Long appointmentId) throws Exception {
+		Appointment appointment = appointmentRepository.findById(appointmentId)
+				.orElse(null);
+		if(appointment == null)
+			throw new Exception(String.format("Appointment with id : %d not found", appointmentId));
+		return appointment;
+	}
 }
