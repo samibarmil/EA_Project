@@ -22,6 +22,9 @@ public class PersonService {
         if (!isEmailUnique(person))
             throw new Exception("Email must be unique.");
 
+        if (!isUsernameUnique(person))
+            throw new Exception("Username must be unique.");
+
         person.setPassword(passwordEncoder.encode(person.getPassword()));
         this.personRepository.save(person);
         return person;
@@ -39,5 +42,11 @@ public class PersonService {
         Person personByEmail = personRepository.findTopByEmail(person.getEmail())
                 .orElse(null);
         return personByEmail == null;
+    }
+
+    public Boolean isUsernameUnique(Person person) {
+        Person personByUsername = personRepository.findTopByUsername(person.getUsername())
+                .orElse(null);
+        return personByUsername == null;
     }
 }
