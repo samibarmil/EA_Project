@@ -49,7 +49,7 @@ public class SessionService {
 	// Service for editing Session
 	public Session editSession(Long sessionId, Session updatedSession) throws Exception {
 
-		if(!sessionId.equals(updatedSession.getId())) throw new Exception("Session id doen't match.");
+		if(!sessionId.equals(updatedSession.getId())) throw new Exception("Session id dose not match.");
 
 		Session session = sessionRepository.findById(sessionId)
 				.orElseThrow(() ->
@@ -74,5 +74,11 @@ public class SessionService {
 			throw new Exception("You have no access to this session.");
 
 		return session.getAppointments();
+	}
+
+	public Boolean doesSessionBelongsToProvider(Long sessionId, Person provider) {
+		Session session = sessionRepository.findTopByIdAndProvider(sessionId, provider)
+				.orElse(null);
+		return session != null;
 	}
 }

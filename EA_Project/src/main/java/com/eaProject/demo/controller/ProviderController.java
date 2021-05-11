@@ -35,6 +35,9 @@ public class ProviderController {
 
 	@PutMapping(path = "/sessions/{id}")
 	ResponseEntity<?> editSession(@PathVariable Long id, @RequestBody Session session) {
+		Person currentUse = personService.getCurrentUser();
+		if(!sessionService.doesSessionBelongsToProvider(id, currentUse))
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You have no access to this session.");
 		try {
 			// Todo: check if the provider owns the session
 			return ResponseEntity.ok(sessionService.editSession(id, session));
@@ -42,13 +45,21 @@ public class ProviderController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
 		}
 	}
-
-	// Todo: [GET] /sessions/{id}
+	
 	@GetMapping("/sessions/{id}")
 	ResponseEntity<?> getSession(@PathVariable Long id) {
+		Person currentUser = personService.getCurrentUser();
 		Session session = sessionService.getSessionById(id).orElse(null);
+
 		if(session == null)
 			ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("Session with id : %d not found", id));
+
+		if(session != null &&
+				!session.getProvider()
+						.getUsername()
+						.equals(currentUser.getUsername())
+		)
+			ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You have no access to this session.");
 		return ResponseEntity.ok(session);
 	}
 
@@ -74,6 +85,8 @@ public class ProviderController {
 	}
 
 	// Todo: [GET] /appointments/{id}
+
+
 
 }
 
