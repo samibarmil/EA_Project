@@ -1,27 +1,17 @@
 package com.eaProject.demo.domain;
+import lombok.NoArgsConstructor;
 
 import lombok.Data;
 
 
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.persistence.*;
 
 
 
 @Entity
-@Data
+@Data @NoArgsConstructor
 public class Person {
 
 	@Id @GeneratedValue
@@ -52,12 +42,15 @@ public class Person {
 	@Embedded
 	private Address address;
 	
-	@OneToMany
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinColumn(name="person_id")
 	private List<PersonRole> personRole;
-	
-	
-	
-	public Person() {}
 
+	public Person(String email, String firstName, String lastName, String username, String password) {
+		this.email = email;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.username = username;
+		this.password = password;
+	}
 }
