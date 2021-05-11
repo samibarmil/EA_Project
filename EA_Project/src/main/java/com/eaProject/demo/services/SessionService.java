@@ -15,7 +15,6 @@ public class SessionService {
 	@Autowired
 	private SessionRepository sessionRepository;
 
-
 	// Service for get all Session
 	public List<Session> getAllSession(){
 		return sessionRepository.findAll();
@@ -25,6 +24,7 @@ public class SessionService {
 	public Optional<Session> getSessionById(long id){
 		return sessionRepository.findById(id);
 	}
+
 	// Service for get Sessions by Provider
 	public List<Session> getSessionByProvider(Person provider){
 		return sessionRepository.findByProvider(provider);
@@ -38,6 +38,23 @@ public class SessionService {
 	// Service for deleting Session
 	public void deleteSessionById(Long id) {
 		sessionRepository.deleteById(id);
+	}
+
+	// Service for editing Session
+	public Session editSession( Session editSession, long id){
+		return sessionRepository.findById(id)
+				.map(session -> {
+					session.setDate(editSession.getDate());
+					session.setDuration(editSession.getDuration());
+					session.setProvider(editSession.getProvider());
+					session.setLocation(editSession.getLocation());
+					session.setAppointments(editSession.getAppointments());
+					session.setStartTime(editSession.getStartTime());
+					return sessionRepository.save(session);
+				}).orElseGet(() -> {
+					editSession.setId(id);
+					return sessionRepository.save(editSession);
+				});
 	}
 
 }

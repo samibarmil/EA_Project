@@ -1,13 +1,17 @@
 package com.eaProject.demo.services;
 
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.eaProject.demo.domain.Appointment;
 import com.eaProject.demo.domain.Session;
+import com.eaProject.demo.exceptions.ResourceNotFoundException;
 import com.eaProject.demo.repository.AppointmentRepository;
 import com.eaProject.demo.repository.SessionRepository;
 
@@ -53,5 +57,56 @@ public class AppointmentService {
 	public void deleteAppointmentAdmin(Long id) {
 		appointmentRepository.deleteById(id);
 	}
+	
+	
+	public Appointment updatefromclient(Long id,@Valid Appointment appointment) throws Exception {
+		if(appointmentRepository.getOne(id)!=null) {
+			Date getsessiondate = appointmentRepository.getOne(id).getSession().getDate();
+			long m = Math.abs(getsessiondate.getTime() - new Date().getTime());
+			long d = TimeUnit.HOURS.convert(m, TimeUnit.MILLISECONDS);
+			if (d > 48) {
+				Appointment appointments=  appointmentRepository.findById(id)
+						.orElseThrow(() -> new ResourceNotFoundException("Note", "id",id));
+				appointments.setAppointmentStatus(appointment.getAppointmentStatus());
+				//appointments.setClient(appointment.getClient());
+				//appointments.setSession(appointment.getSession());
+				//appointments.setSession(appointment.get);
 
+			    Appointment appointmentupdated=  appointmentRepository.save(appointments);
+			    return appointmentupdated;
+			}
+			else {
+				throw  new ResourceNotFoundException("Appointments can be cancelled or modified up to 48 hours before the session", "id=",id);
+			}
+			
+		}else {
+			 throw  new ResourceNotFoundException("Appointment with that id doesn't exist", "id=",id);
+		}
+	    
+	}
+
+		public Appointment updatefromadmin(Long id,@Valid Appointment appointment) throws Exception {
+
+			Appointment appointments=  appointmentRepository.findById(id)
+					.orElseThrow(() -> new ResourceNotFoundException("Appointment with that id doesn't exist", "id",id));
+			appointments.setAppointmentStatus(appointment.getAppointmentStatus());
+			//appointments.setClient(appointment.getClient());  //--> TO DISCUSS
+			appointments.setSession(appointment.getSession());
+			//appointments.setSession(appointment.get);
+
+		    Appointment appointmentupdated=  appointmentRepository.save(appointments);
+			
+		    return appointmentupdated;
+	}
+		
+		public List<Appointment> GetAllClient() {
+			List<Appointment> list = appointmentRepository.findAll();
+			return list;
+		}
+		
+		public List<Appointment> GetAllAdmin() {
+			List<Appointment> list = appointmentRepository.findAll();
+			return list;
+		}
+	
 }
