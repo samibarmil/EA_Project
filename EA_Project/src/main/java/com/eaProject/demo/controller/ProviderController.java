@@ -15,12 +15,12 @@ import java.util.List;
 public class ProviderController {
 
 	@Autowired
-	PersonService personService;
+	private PersonService personService;
 	@Autowired
-	SessionService sessionService;
+	private SessionService sessionService;
 
 	@GetMapping(path="/sessions", produces = "application/json")
-	public ResponseEntity<?> getSessions() {
+	public ResponseEntity<?> getSessions() { // Todo: ?futureOnly=true
 		Person currentUser = personService.getCurrentUser();
 		List<Session> sessions = sessionService.getSessionsByProvider(currentUser);
 		return ResponseEntity.ok(sessions);
@@ -36,11 +36,14 @@ public class ProviderController {
 	@PutMapping(path = "/sessions/{id}")
 	ResponseEntity<?> editSession(@PathVariable Long id, @RequestBody Session session) {
 		try {
+			// Todo: check if the provider owns the session
 			return ResponseEntity.ok(sessionService.editSession(id, session));
 		} catch (Exception exception) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
 		}
 	}
+
+	// Todo: [GET] /sessions/{id}
 
 	@DeleteMapping("/sessions/{id}")
 	ResponseEntity<?> deleteSession(@PathVariable Long id) {
@@ -53,6 +56,18 @@ public class ProviderController {
 		}
 	}
 
+	// Todo: [GET] /sessions/{id}/appointments
+	@GetMapping("/sessions/{id}/appointments")
+	ResponseEntity<?> getSessionAppointments(@PathVariable Long id) {
+		Person currentUser = personService.getCurrentUser();
+		try {
+			return ResponseEntity.ok(sessionService.getSessionAppointments(id, currentUser));
+		} catch (Exception exception) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+		}
+	}
+
+	// Todo: [GET] /appointments/{id}
 }
 
 

@@ -1,5 +1,6 @@
 package com.eaProject.demo.services;
 
+import com.eaProject.demo.domain.Appointment;
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
 import com.eaProject.demo.repository.SessionRepository;
@@ -64,4 +65,14 @@ public class SessionService {
 		this.deleteSessionById(sessionId);
 	}
 
+
+	public List<Appointment> getSessionAppointments(Long id, Person currentUser) throws Exception {
+		Session session = sessionRepository.findById(id)
+				.orElseThrow(() -> new Exception(String.format("Session with id : %d not found", id)));
+
+		if(!session.getProvider().getUsername().equals(currentUser.getUsername()))
+			throw new Exception("You have no access to this session.");
+
+		return session.getAppointments();
+	}
 }
