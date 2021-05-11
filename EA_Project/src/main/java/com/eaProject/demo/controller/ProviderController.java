@@ -1,4 +1,5 @@
 package com.eaProject.demo.controller;
+
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
 import com.eaProject.demo.services.PersonService;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 @RestController
 @RequestMapping("/provider")
 public class ProviderController {
@@ -19,7 +21,7 @@ public class ProviderController {
 	@Autowired
 	private SessionService sessionService;
 
-	@GetMapping(path="/sessions", produces = "application/json")
+	@GetMapping(path = "/sessions", produces = "application/json")
 	public ResponseEntity<?> getSessions() { // Todo: ?futureOnly=true
 		Person currentUser = personService.getCurrentUser();
 		List<Session> sessions = sessionService.getSessionsByProvider(currentUser);
@@ -27,7 +29,7 @@ public class ProviderController {
 	}
 
 	@PostMapping(path = "/sessions", produces = "application/json")
-	ResponseEntity<?> addSession(@RequestBody Session session){
+	ResponseEntity<?> addSession(@RequestBody Session session) {
 		Person currentUser = personService.getCurrentUser();
 		session.setProvider(currentUser);
 		return ResponseEntity.ok(sessionService.addSession(session));
@@ -36,7 +38,7 @@ public class ProviderController {
 	@PutMapping(path = "/sessions/{id}")
 	ResponseEntity<?> editSession(@PathVariable Long id, @RequestBody Session session) {
 		Person currentUse = personService.getCurrentUser();
-		if(!sessionService.doesSessionBelongsToProvider(id, currentUse))
+		if (!sessionService.doesSessionBelongsToProvider(id, currentUse))
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You have no access to this session.");
 		try {
 			// Todo: check if the provider owns the session
@@ -45,20 +47,16 @@ public class ProviderController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
 		}
 	}
-	
+
 	@GetMapping("/sessions/{id}")
 	ResponseEntity<?> getSession(@PathVariable Long id) {
 		Person currentUser = personService.getCurrentUser();
 		Session session = sessionService.getSessionById(id).orElse(null);
 
-		if(session == null)
+		if (session == null)
 			ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("Session with id : %d not found", id));
 
-		if(session != null &&
-				!session.getProvider()
-						.getUsername()
-						.equals(currentUser.getUsername())
-		)
+		if (session != null && !session.getProvider().getUsername().equals(currentUser.getUsername()))
 			ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You have no access to this session.");
 		return ResponseEntity.ok(session);
 	}
@@ -86,8 +84,4 @@ public class ProviderController {
 
 	// Todo: [GET] /appointments/{id}
 
-
-
 }
-
-

@@ -46,34 +46,42 @@ public class AppointmentService {
 	public void deleteAppointmentClient(Long id) {
 		boolean hasApprovedAppointment = false;
 		
-		Appointment appointment = appointmentRepository.getOne(id);
-		Person client = appointment.getClient();
+		if(appointmentRepository.getOne(id)!=null) {
+			Appointment appointment = appointmentRepository.getOne(id);
+			Person client = appointment.getClient();
+			
+			// check if cancelling appointment was approved or not
+			if(appointment.getAppointmentStatus()==AppointmentStatus.APPROVED) {
+				hasApprovedAppointment = true;
+			}
+			
+			// calculate how much time left until session
+			Date sessionDate = appointment.getSession().getDate();
+			long diffInMillies = Math.abs(sessionDate.getTime() - new Date().getTime());
+			long diff = TimeUnit.HOURS.convert(diffInMillies, TimeUnit.MILLISECONDS);
 
-		// check there are APPROVED appointments
-		if(appointment.getAppointmentStatus()==AppointmentStatus.APPROVED) {
-			hasApprovedAppointment = true;
-		}
-		Date sessionDate = appointment.getSession().getDate();
-		long diffInMillies = Math.abs(sessionDate.getTime() - new Date().getTime());
-		long diff = TimeUnit.HOURS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+			// if session is in more than 48 hours, cancel
+			if (diff > 48) {
+				appointmentRepository.deleteById(id);
+				emailService.EmailNotification(client, NotificationAction.CANCELED, "Appointment");
+			} else {
+				throw new RuntimeException("Less than 48 hours");
+			}
+			
+			List<Appointment> appointments = new ArrayList<>();
+			appointments = appointmentRepository.findAllByOrderByIdAsc();
 
-		// if session is later than 48 hours, cancel
-		if (diff > 48) {
-			appointmentRepository.deleteById(id);
-			emailService.EmailNotification(client, NotificationAction.CANCELED, "Appointment");
-		} else {
-			throw new RuntimeException("Less than 48 hours");
+			//if deleted appointment was approved then make next appointment approved (Orgil)
+			if(hasApprovedAppointment && appointments!=null) {
+				Appointment nextAppointment = appointments.get(0);
+				nextAppointment.setAppointmentStatus(AppointmentStatus.APPROVED);
+				appointmentRepository.save(appointment);
+			}
+		}else {
+			throw  new ResourceNotFoundException("Appointment with that id doesn't exist", "id=",id);
 		}
 		
-		List<Appointment> appointments = new ArrayList<>();
-		appointments = appointmentRepository.findAllByOrderByIdAsc();
 
-		//if deleted appointment was approved then make next appointment approved (Orgil)
-		if(hasApprovedAppointment && appointments!=null) {
-			Appointment nextAppointment = appointments.get(0);
-			nextAppointment.setAppointmentStatus(AppointmentStatus.APPROVED);
-			appointmentRepository.save(appointment);
-		}
 	}
 
 	// Service for deleting an appointment for Admin by Orgil

@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eaProject.demo.domain.Appointment;
-import com.eaProject.demo.exceptions.ResourceNotFoundException;
 import com.eaProject.demo.services.AppointmentService;
 
 @RestController

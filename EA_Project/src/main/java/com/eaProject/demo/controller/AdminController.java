@@ -1,16 +1,13 @@
 package com.eaProject.demo.controller;
 
-import com.eaProject.demo.domain.Person;
-import com.eaProject.demo.domain.PersonRole;
-import com.eaProject.demo.domain.Role;
+import com.eaProject.demo.domain.*;
 import com.eaProject.demo.services.PersonService;
+import com.eaProject.demo.services.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 
@@ -18,8 +15,11 @@ import java.util.Arrays;
 @RequestMapping("/admin")
 public class AdminController {
 
+	@Autowired
+	PersonService personService;
+
     @Autowired
-    PersonService personService;
+    SessionService sessionService;
 
     @RequestMapping("/add-provider")
     public ResponseEntity<?> addProvider(@RequestBody Person person) {
@@ -35,23 +35,43 @@ public class AdminController {
         return ResponseEntity.ok(personWithId);
     }
 
-    // Todo: GET /sessions?futureOnly=true
+	// Todo: GET /sessions?futureOnly=true
 
     // Todo: GET /sessions/{id}
+    Session getSession(@PathVariable long id) throws Exception {
+        return sessionService.getSessionById(id)
+                .orElseThrow(() -> new Exception("Id not found"));
+    }
 
-    // Todo: GET /sessions/{id}/appointments
+	// Todo: GET /sessions/{id}/appointments
 
     // Todo: DELETE /sessions/{id}
+    @DeleteMapping("/sessions/delete/{id}")
+    void deleteSession(@PathVariable long id){
+        sessionService.deleteSessionById(id);
+    }
 
-    // Todo: GET /appointments/
+    // todo: EDIT /sessions/edit/{id}
+    @PutMapping("/sessions/edit/{id}")
+    Session editSession(@RequestBody Session editSession, @PathVariable long id) throws Exception {
+        return sessionService.editSession(id, editSession);
+    }
 
-    // Todo: UPDATE /appointments/{id}
+    // todo: ADD /sessions/add
+    @PostMapping(path = "/sessions/add")
+    Session addSession(@RequestBody Session session){
+        return sessionService.addSession(session);
+    }
 
-    // Todo: DELETE /appointments/{id}
+	// Todo: GET /appointments/
 
-    // Todo: GET /persons
+	// Todo: UPDATE /appointments/{id}
 
-    // Todo: GET /persons/{id}
+	// Todo: DELETE /appointments/{id}
 
-    // Todo: UPDATE /persons/{id}
+	// Todo: GET /persons
+
+	// Todo: GET /persons/{id}
+
+	// Todo: UPDATE /persons/{id}
 }
