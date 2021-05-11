@@ -2,15 +2,15 @@ spring:
   mail:
     host: smtp.mailtrap.io
     port: 25
-    username: 2200fa28d82ae3
-    password: a8c48e543263fb
+    username: 494a573a5e3cc2
+    password: 8978744c57fb23
   application:
     name: EA_Project
   datasource:
-    url: jdbc:mysql://localhost:3306/ea_project
-    username: root
-    password: admin
-    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:sqlserver://localhost:1433;databaseName=ea_project
+    username: sami
+    password: 12345
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
     hikari:
       maximumPoolSize: 10
   jpa:
@@ -22,7 +22,7 @@ spring:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+        dialect: org.hibernate.dialect.SQLServer2012Dialect
 logging:
   file:
     name: /Coding/Logging/${spring.application.name}/log

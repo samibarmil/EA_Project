@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.eaProject.demo.domain.Appointment;
 import com.eaProject.demo.services.AppointmentService;
+import com.eaProject.demo.services.EmailService;
+import com.eaProject.demo.services.NotificationAction;
 
 @RestController
 @RequestMapping("/client")
@@ -22,6 +24,8 @@ public class ClientController {
 	private PersonService personService;
 	@Autowired
 	private SessionService sessionService;
+	@Autowired
+	private EmailService emailService;
 
 	@GetMapping("/sessions")
 	public ResponseEntity<?> getSessions(@RequestParam Boolean futureOnly) {
@@ -40,19 +44,22 @@ public class ClientController {
 	public ResponseEntity<?> createAppointment(@PathVariable Long id) {
 
 		Person currentUser = personService.getCurrentUser();
-		if(!appointmentService.isFirstAppointmentOfSession(id, currentUser))
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body("Only one appointment allowed for a session");
+		if (!appointmentService.isFirstAppointmentOfSession(id, currentUser))
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Only one appointment allowed for a session");
 
 		Session session = sessionService.getSessionById(id).orElse(null);
 		if (session == null)
-			return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("Session with id : %d not found!", id));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body(String.format("Session with id : %d not found!", id));
 
-		// Todo: if session is in the past return error
-
-		Appointment appointment = appointmentService.addAppointment(new Appointment(session, currentUser));
+		Appointment appointment = null;
+		try {
+			appointment = appointmentService.addAppointment(new Appointment(session, currentUser));
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Appointment sessions is not in the future.");
+		}
+		emailService.EmailNotification(currentUser , NotificationAction.CREATED, "Appointment");
 		appointment.getClient().setPassword(null);
-
 		return ResponseEntity.ok(appointment);
 	}
 
@@ -70,30 +77,32 @@ public class ClientController {
 
 		if (!appointmentService.isOwnerOfAppointment(currentUser, appointment))
 		appointmentService.deleteAppointmentClient(appointmentId);
+		emailService.EmailNotification(currentUser , NotificationAction.DELETED, "Appointment");
 		return ResponseEntity.ok("count : 1");
 	}
-	
+
 	@PutMapping("/appointments/{id}/cancel")
-    public ResponseEntity<?> update(@PathVariable(value = "id") Long id) throws Exception{
+	public ResponseEntity<?> update(@PathVariable(value = "id") Long id) throws Exception {
 
 		Person currentUser = personService.getCurrentUser();
 		Appointment appointment = appointmentService.getAppointment(id);
 
 		// check if the appointment belongs to the user
-		if(!appointmentService.isOwnerOfAppointment(currentUser, appointment))
+		if (!appointmentService.isOwnerOfAppointment(currentUser, appointment))
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You do not have right to cancel");
 
-		//  Appointments can be cancelled or modified up to 48 hours before the session
-		if(!sessionService.isSessionInFuture(appointment.getSession()))
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not update appointments of passed sessions.");
+		// Appointments can be cancelled or modified up to 48 hours before the session
+		if (!sessionService.isSessionInFuture(appointment.getSession()))
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body("Can not update appointments of passed sessions.");
 		appointment.setAppointmentStatus(AppointmentStatus.CANCELED);
 
-		// Todo : Send an email (to the creator of appointment, counselor and customer)
-		return ResponseEntity.ok(appointmentService.updatefromclient(id,appointment));
-    }
+		emailService.EmailNotification(currentUser, NotificationAction.UPDATED, "Appointment");
+		return ResponseEntity.ok(appointmentService.updatefromclient(id, appointment));
+	}
 
 	// All appointments requested by the client
-	@GetMapping(path="/appointments",produces = "application/json; charset=UTF-8")
+	@GetMapping(path = "/appointments", produces = "application/json; charset=UTF-8")
 	@ResponseBody
 	public ResponseEntity<?> GetAll() throws Exception {
 		Person currentPerson = personService.getCurrentUser();
