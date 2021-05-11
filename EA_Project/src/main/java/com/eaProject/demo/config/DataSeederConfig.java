@@ -19,12 +19,16 @@ public class DataSeederConfig {
     private PersonService personService;
 
     @EventListener
-    public void seed (ContextRefreshedEvent event) {
+    public void seed (ContextRefreshedEvent event)  {
         Person ADMIN = new Person("admin@gmail.com", "Admin", "Admin", "admin", "adminpass");
         Address address = new Address("US", "Iowa", "Fairfield", "1000 Nth 8th St.", "52352");
         ADMIN.setAddress(address);
         PersonRole[] personRoles = new PersonRole[] {new PersonRole(Role.ADMIN)};
         ADMIN.setPersonRole(Arrays.asList(personRoles));
-        personService.addPerson(ADMIN);
+        try {
+            personService.addPerson(ADMIN);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
     }
 }
