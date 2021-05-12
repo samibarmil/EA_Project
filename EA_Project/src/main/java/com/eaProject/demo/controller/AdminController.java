@@ -87,14 +87,16 @@ public class AdminController {
 		return ResponseEntity.ok(updateSession);
 	}
 
-	// todo: ADD /sessions/add
-	@PostMapping(path = "/sessions/add")
+	// todo: ADD /sessions
+	@PostMapping(path = "/sessions", produces = "application/json")
 	ResponseEntity<?> addSession(@RequestBody Session session) {
-		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.CREATED, session);
+		Person currentUser = personService.getCurrentUser();
+		session.setProvider(currentUser);
+		emailservice.DomainEmailNotification(currentUser, NotificationAction.CREATED, session);
 		return ResponseEntity.ok(sessionService.addSession(session));
 	}
 
-	// Todo: GET /appointments/
+	// Todo: GET /sessions/{id}/appointments
 	@GetMapping("/sessions/{id}/appointments")
 	ResponseEntity<?> getSessionAppointments(@PathVariable Long id) {
 		try {
@@ -104,10 +106,33 @@ public class AdminController {
 		}
 	}
 
+
+	// Todo: GET /appointments
+	@GetMapping("/appointments")
+	ResponseEntity<?> getAppointments() {
+		try {
+			return ResponseEntity.ok(appointmentService.getAllAppointment());
+		} catch (Exception exception) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+		}
+	}
+
+	// Todo: GET /appointments
+	@GetMapping("/appointments/{id}")
+	ResponseEntity<?> getAppointmentById(@PathVariable("id") long id) {
+		try {
+			return ResponseEntity.ok(appointmentService.getAppointment(id));
+		} catch (Exception exception) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+		}
+	}
+
 	// Todo: UPDATE /appointments/{id}
 	@PutMapping("/appointments/{id}")
 	public Appointment update(@PathVariable(value = "id") Long id, @Valid @RequestBody Appointment appointment)
 			throws Exception {
+		Appointment currentAppointment = appointmentService.getAppointment(id);
+		appointment.getSession().setProvider(currentAppointment.getSession().getProvider());
 		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.UPDATED, appointment);
 		return appointmentService.updatefromadmin(id, appointment);
 	}
