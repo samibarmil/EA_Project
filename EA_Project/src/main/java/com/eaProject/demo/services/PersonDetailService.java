@@ -20,6 +20,7 @@ public class PersonDetailService implements UserDetailsService {
     @Autowired
     PersonRepository personRepository;
 
+    // give username and return User object
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Person person = personRepository.findTopByUsername(username)
