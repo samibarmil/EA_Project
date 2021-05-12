@@ -3,6 +3,8 @@ package com.eaProject.demo.controller;
 import com.eaProject.demo.domain.Appointment;
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
+import com.eaProject.demo.exceptions.UnauthorizedAccessException;
+import com.eaProject.demo.exceptions.UnprocessableEntityException;
 import com.eaProject.demo.services.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,75 +38,58 @@ public class ProviderController {
 	ResponseEntity<?> addSession(@RequestBody Session session) {
 		Person currentUser = personService.getCurrentUser();
 		session.setProvider(currentUser);
+		Session addedSession = sessionService.addSession(session);
 		emailservice.DomainEmailNotification(currentUser, NotificationAction.CREATED, session);
-		return ResponseEntity.ok(sessionService.addSession(session));
+		return ResponseEntity.ok(addedSession);
 	}
 
 	@PutMapping(path = "/sessions/{id}")
-	ResponseEntity<?> editSession(@PathVariable Long id, @RequestBody Session session) {
+	ResponseEntity<?> editSession(@PathVariable Long id, @RequestBody Session session)
+			throws UnauthorizedAccessException, UnprocessableEntityException {
 		Person currentUse = personService.getCurrentUser();
 		if (!sessionService.doesSessionBelongsToProvider(id, currentUse))
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You have no access to this session.");
-		try {
-			// Todo: check if the provider owns the session
-			Session edited_session = sessionService.editSession(id, session);
-			emailservice.DomainEmailNotification(currentUse, NotificationAction.UPDATED, edited_session);
-			return ResponseEntity.ok(edited_session);
-		} catch (Exception exception) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
-		}
+			throw new UnauthorizedAccessException("You have no access to this session.");
+		Session edited_session = sessionService.editSession(id, session);
+		emailservice.DomainEmailNotification(currentUse, NotificationAction.UPDATED, edited_session);
+		return ResponseEntity.ok(edited_session);
 	}
 
 	@GetMapping("/sessions/{id}")
-	ResponseEntity<?> getSession(@PathVariable Long id) {
+	ResponseEntity<?> getSession(@PathVariable Long id) throws UnauthorizedAccessException {
 		Person currentUser = personService.getCurrentUser();
-		Session session = sessionService.getSessionById(id).orElse(null);
-
-		if (session == null)
-			ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("Session with id : %d not found", id));
+		Session session = sessionService.getSessionById(id);
 
 		if (session != null && !session.getProvider().getUsername().equals(currentUser.getUsername()))
-			ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You have no access to this session.");
+			throw new UnauthorizedAccessException("You have no access to this session.");
 		return ResponseEntity.ok(session);
 	}
 
 	@DeleteMapping("/sessions/{id}")
 	ResponseEntity<?> deleteSession(@PathVariable Long id) {
-		try {
-			Person currentUser = personService.getCurrentUser();
-			sessionService.removeSessionFromProvider(id, currentUser);
-			emailservice.DomainEmailNotification(currentUser, NotificationAction.DELETED, sessionService.getSessionById(id));
-			return ResponseEntity.ok("count : 1");
-		} catch (Exception exception) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
-		}
+		Person currentUser = personService.getCurrentUser();
+		Session session = sessionService.getSessionById(id);
+		sessionService.removeSessionFromProvider(session.getId(), currentUser);
+		emailservice.DomainEmailNotification(currentUser, NotificationAction.DELETED, session);
+		return ResponseEntity.ok("count : 1");
 	}
 
 	@GetMapping("/sessions/{id}/appointments")
-	ResponseEntity<?> getSessionAppointments(@PathVariable Long id) {
+	ResponseEntity<?> getSessionAppointments(@PathVariable Long id) throws UnauthorizedAccessException {
 		Person currentUser = personService.getCurrentUser();
-		try {
-			return ResponseEntity.ok(sessionService.getSessionAppointments(id, currentUser));
-		} catch (Exception exception) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
-		}
+		return ResponseEntity.ok(sessionService.getSessionAppointments(id, currentUser));
 	}
 
 	@GetMapping("/sessions/{id}/approved-appointment")
-	ResponseEntity<?> getSessionApprovedAppointment(@PathVariable Long id) {
+	ResponseEntity<?> getSessionApprovedAppointment(@PathVariable Long id) throws UnauthorizedAccessException {
 		Person currentUser = personService.getCurrentUser();
-		Appointment appointment = null;
-		try {
-			appointment = appointmentService.getApprovedAppointment(id);
-			if(appointment != null &&
-					!currentUser.getUsername().equals(
-							appointment.getSession().getProvider().getUsername())
-			)
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized to access this session.");
-			return ResponseEntity.ok(appointment);
-		} catch (Exception exception) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
-		}
+		Appointment appointment = appointmentService.getApprovedAppointment(id);
+		if(appointment != null &&
+				!currentUser.getUsername().equals(
+						appointment.getSession().getProvider().getUsername())
+		)
+			throw new UnauthorizedAccessException("Unauthorized to access this session.");
+		return ResponseEntity.ok(appointment);
+
 	}
 
 	// Todo: [GET] /appointments/{id}
