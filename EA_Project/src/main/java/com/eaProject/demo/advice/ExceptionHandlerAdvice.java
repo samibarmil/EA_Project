@@ -42,4 +42,12 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
         errorData.setMessage(ex.getMessage());
         return buildResponseEntity(errorData);
     }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(Exception.class)
+    protected ResponseEntity<Object> handleOtherExceptions(
+            Exception ex) {
+        ErrorData errorData = new ErrorData(BAD_REQUEST);
+        errorData.setMessage(ex.getMessage());
+        return buildResponseEntity(errorData);
+    }
 }
