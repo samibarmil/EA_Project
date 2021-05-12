@@ -30,7 +30,7 @@ public class ClientController {
 	private EmailService emailService;
 
 	@GetMapping("/sessions")
-	public ResponseEntity<?> getSessions(@RequestParam Boolean futureOnly) {
+	public ResponseEntity<?> getSessions(@RequestParam(required = false) Boolean futureOnly) {
 		if (futureOnly)
 			return ResponseEntity.ok(sessionService.getAllFutureSessions());
 		return ResponseEntity.ok(sessionService.getAllSessions());

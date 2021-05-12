@@ -14,6 +14,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
@@ -43,48 +47,73 @@ public class AdminController {
 	}
 
 	// Todo: GET /sessions?futureOnly=true
+	@GetMapping("/sessions")
+	ResponseEntity<?> getSession(@RequestParam(required = false, name = "futureOnly") boolean futureOnly) throws Exception {
+		if(futureOnly) {
+			return ResponseEntity.ok(sessionService.getAllFutureSessions());
+		}
+		return ResponseEntity.ok(sessionService.getAllSessions());
+	}
 
 	// Todo: GET /sessions/{id}
-	Session getSession(@PathVariable Long id) throws Exception {
-		return sessionService.getSessionById(id);
+	@GetMapping("/sessions/{id}")
+	ResponseEntity<?> getSession(@PathVariable long id) throws Exception {
+		return ResponseEntity.ok(sessionService.getSessionById(id));
+	}
+
+	// Todo: DELETE /sessions/{id}
+	@DeleteMapping("/sessions/{id}")
+	ResponseEntity<?> deleteSession(@PathVariable long id) {
+		Session session = sessionService.getSessionById(id);
+		sessionService.deleteSessionById(id);
+		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.DELETED, "");
+		return ResponseEntity.ok("Delete Successfully");
+	}
+
+	// todo: EDIT /sessions/{id}
+	@PutMapping("/sessions/{id}")
+	ResponseEntity<?> editSession(@RequestBody Session editSession, @PathVariable long id)
+			throws UnprocessableEntityException {
+		Session session = sessionService.getSessionById(id);
+		editSession.setProvider(session.getProvider());
+		Session updateSession = sessionService.editSession(id, editSession);
+		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.UPDATED, updateSession);
+		return ResponseEntity.ok(updateSession);
+	}
+
+	// todo: ADD /sessions
+	@PostMapping(path = "/sessions", produces = "application/json")
+	ResponseEntity<?> addSession(@RequestBody Session session) {
+		Person currentUser = personService.getCurrentUser();
+		session.setProvider(currentUser);
+		emailservice.DomainEmailNotification(currentUser, NotificationAction.CREATED, session);
+		return ResponseEntity.ok(sessionService.addSession(session));
 	}
 
 	// Todo: GET /sessions/{id}/appointments
-
-	// Todo: DELETE /sessions/{id}
-	@DeleteMapping("/sessions/delete/{id}")
-	void deleteSession(@PathVariable Long id) {
-		Session session = sessionService.getSessionById(id);
-		sessionService.deleteSessionById(session.getId());
-		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.DELETED, session);
-	}
-
-	// todo: EDIT /sessions/edit/{id}
-	@PutMapping("/sessions/edit/{id}")
-	ResponseEntity<?> editSession(@RequestBody Session editSession, @PathVariable long id)
-			throws UnprocessableEntityException {
-		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.UPDATED, editSession);
-		return ResponseEntity.ok(sessionService.editSession(id, editSession));
-
-	}
-
-	// todo: ADD /sessions/add
-	@PostMapping(path = "/sessions/add")
-	ResponseEntity<?> addSession(@RequestBody Session session) {
-		Session newSession = sessionService.addSession(session);
-		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.CREATED, session);
-		return ResponseEntity.ok(newSession);
-	}
-
-	// Todo: GET /appointments/
 	@GetMapping("/sessions/{id}/appointments")
 	ResponseEntity<?> getSessionAppointments(@PathVariable Long id) {
 		return ResponseEntity.ok(sessionService.getSessionAppointments(id));
 	}
 
+
+	// Todo: GET /appointments
+	@GetMapping("/appointments")
+	ResponseEntity<?> getAppointments() {
+		return ResponseEntity.ok(appointmentService.getAllAppointment());
+	}
+
+	// Todo: GET /appointments
+	@GetMapping("/appointments/{id}")
+	ResponseEntity<?> getAppointmentById(@PathVariable("id") long id) {
+		return ResponseEntity.ok(appointmentService.getAppointment(id));
+	}
+
 	// Todo: UPDATE /appointments/{id}
-	@PutMapping("/client/appointments/{id}")
+	@PutMapping("/appointments/{id}")
 	public ResponseEntity<?> update(@PathVariable(value = "id") Long id, @Valid @RequestBody Appointment appointment) {
+		Appointment currentAppointment = appointmentService.getAppointment(id);
+		appointment.getSession().setProvider(currentAppointment.getSession().getProvider());
 		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.UPDATED, appointment);
 		return ResponseEntity.ok(appointmentService.updateFromAdmin(id, appointment));
 	}
@@ -98,22 +127,23 @@ public class AdminController {
 		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.DELETED, "");
 	}
 
-	//GET /persons
+	// Todo: GET /persons
 	@GetMapping("/persons")
 	public ResponseEntity<?> getAllPersons() {
 		return ResponseEntity.ok(personService.getAllPersons());
 	}
 
-	//GET /persons/{id}
+	// Todo: GET /persons/{id}
 	@GetMapping("/persons/{id}")
 	public ResponseEntity<?> getPersonById(@PathVariable(value = "id") Long id){
 		Person person = personService.getPersonById(id);
-		if(person == null)
+		if(person == null) {
 			throw new EntityNotFoundException(String.format("Person with id : %d not found.", id));
+		}
 		return ResponseEntity.ok(person);
 	}
 
-	//UPDATE /persons/{id}
+	// Todo: UPDATE /persons/{id}
 	@PutMapping("/persons/{id}")
 	public ResponseEntity<?> updatePerson(@PathVariable(value = "id")Long id, @RequestBody Person person)
 			throws UnprocessableEntityException {
@@ -121,7 +151,6 @@ public class AdminController {
 			emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.UPDATED, p);
 			return ResponseEntity.ok(p);
 	}
-	// Todo: UPDATE /persons/{id}
 
     // Todo: UPDATE /appointments/{id}/approve
     @PatchMapping("/appointments/{id}/approve")

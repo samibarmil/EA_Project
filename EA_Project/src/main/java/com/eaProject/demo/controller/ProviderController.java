@@ -12,7 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/provider")
@@ -28,8 +30,15 @@ public class ProviderController {
 	private AppointmentService appointmentService;
 
 	@GetMapping(path = "/sessions", produces = "application/json")
-	public ResponseEntity<?> getSessions() { // Todo: ?futureOnly=true
+	ResponseEntity<?> getSession(@RequestParam(required = false, name = "futureOnly") boolean futureOnly) throws Exception {
 		Person currentUser = personService.getCurrentUser();
+		if(futureOnly){
+			Date today = new Date();
+			List<Session> sessions = sessionService.getSessionsByProvider(currentUser)
+					.stream()
+					.filter(session -> session.getDate().after(today))
+					.collect(Collectors.toList());
+		}
 		List<Session> sessions = sessionService.getSessionsByProvider(currentUser);
 		return ResponseEntity.ok(sessions);
 	}

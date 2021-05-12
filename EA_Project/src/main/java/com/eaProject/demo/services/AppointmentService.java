@@ -133,6 +133,10 @@ public class AppointmentService {
 		return appointment;
 	}
 
+	public List<Appointment> getAllAppointment() throws Exception {
+		return appointmentRepository.findAll();
+	}
+
 	public Appointment updateAppointment(Appointment appointment) {
 		return appointmentRepository.save(appointment);
 	}

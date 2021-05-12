@@ -48,10 +48,13 @@ public class Session {
 	public String toString() {
 		return "Session{" +
 				"id=" + id +
+				", provider=" + provider.getLastName() + " " + provider.getFirstName() +
 				", date=" + date +
 				", duration=" + duration +
 				", startTime=" + startTime +
 				", location='" + location + '\'' +
+				", appointment='" + appointments +
 				'}';
 	}
+
 }
