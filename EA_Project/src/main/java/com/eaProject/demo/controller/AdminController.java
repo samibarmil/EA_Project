@@ -13,6 +13,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -48,10 +51,25 @@ public class AdminController {
 	}
 
 	// Todo: GET /sessions?futureOnly=true
+	@GetMapping("/sessions")
+	ResponseEntity<?> getSession(@RequestParam("futureOnly") boolean futureOnly) throws Exception {
+		if(futureOnly) {
+			Date date = new Date();
+			List<Session> sessionList = sessionService.getAllSessions().stream().filter(session -> {
+				return session.getDate().after(date);
+			}).collect(Collectors.toList());
+			for(Session session: sessionList){
+				System.out.println(session.getDate().toString());
+			}
+			return ResponseEntity.ok(sessionList);
+		}
+		return ResponseEntity.ok(sessionService.getAllSessions());
+	}
 
 	// Todo: GET /sessions/{id}
-	Session getSession(@PathVariable long id) throws Exception {
-		return sessionService.getSessionById(id).orElseThrow(() -> new Exception("Id not found"));
+	@GetMapping("/sessions/{id}")
+	ResponseEntity<?> getSession(@PathVariable long id) throws Exception {
+		return ResponseEntity.ok(sessionService.getSessionById(id).orElseThrow(() -> new Exception("Id not found")));
 	}
 
 	// Todo: GET /sessions/{id}/appointments
@@ -65,17 +83,16 @@ public class AdminController {
 
 	// todo: EDIT /sessions/edit/{id}
 	@PutMapping("/sessions/edit/{id}")
-	Session editSession(@RequestBody Session editSession, @PathVariable long id) throws Exception {
+	ResponseEntity<?> editSession(@RequestBody Session editSession, @PathVariable long id) throws Exception {
 		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.UPDATED, editSession);
-		return sessionService.editSession(id, editSession);
-
+		return ResponseEntity.ok(sessionService.editSession(id, editSession));
 	}
 
 	// todo: ADD /sessions/add
 	@PostMapping(path = "/sessions/add")
-	Session addSession(@RequestBody Session session) {
+	ResponseEntity<?> addSession(@RequestBody Session session) {
 		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.CREATED, session);
-		return sessionService.addSession(session);
+		return ResponseEntity.ok(sessionService.addSession(session));
 	}
 
 	// Todo: GET /appointments/

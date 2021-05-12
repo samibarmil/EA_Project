@@ -44,4 +44,16 @@ public class Session {
 	@JsonIgnore
 	private List<Appointment> appointments;
 
+	@Override
+	public String toString() {
+		return "Session{" +
+				"id=" + id +
+				", provider=" + provider.getLastName() + " " + provider.getFirstName() +
+				", date=" + date +
+				", duration=" + duration +
+				", startTime=" + startTime +
+				", location='" + location + '\'' +
+				", appointments=" + appointments +
+				'}';
+	}
 }
