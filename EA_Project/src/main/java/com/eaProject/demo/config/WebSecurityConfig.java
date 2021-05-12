@@ -38,6 +38,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  implements 
                 .anyRequest()
         .authenticated()
         .and()
+        // extract username from jwt, and authenticate using personDetailService for every request
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
         .sessionManagement()
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
@@ -45,6 +46,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  implements 
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    	// get username and password from database and use it to authenticate
         auth.userDetailsService(personDetailService);
     }
 
