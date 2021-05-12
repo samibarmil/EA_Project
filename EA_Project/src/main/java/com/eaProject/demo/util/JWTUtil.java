@@ -12,6 +12,7 @@ import java.time.LocalDate;
 public class JWTUtil {
     private final String SECRET_KEY = "iW5Y7JQX3sTLRlZe1ndfKvktiQhkeSenj/pHvYscMAQ=";
 
+    // build jwt and returns it
      public String generateUserToke(UserDetails userDetails) {
          return Jwts.builder()
                      .setSubject(userDetails.getUsername())

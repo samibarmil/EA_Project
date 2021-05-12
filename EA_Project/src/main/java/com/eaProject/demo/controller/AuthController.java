@@ -32,10 +32,11 @@ public class AuthController {
     @Autowired
     PersonService personService;
     @Autowired 
-    private PersonRepository personrepository;
+    PersonRepository personrepository;
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
         try{
+        	// use username and password to authenticate
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             authenticationRequest.getUsername(),
@@ -46,15 +47,18 @@ public class AuthController {
             throw new Exception("Incorrect username or password", e);
         }
 
+        // if auth is successful
+        // get User object with username, password, role
         UserDetails userDetails = personDetailService.loadUserByUsername(authenticationRequest.getUsername());
+        // generate jwt token using user object
         String jwt =  jwtUtil.generateUserToke(userDetails);
-
+        // respond with jwt token
         return ResponseEntity.ok(new AuthenticationResponse(jwt));
     }
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody Person person) {
-        boolean userexist = personrepository.findusername(person.getUsername()).isPresent();
+        boolean userexist = personrepository.findTopByUsername(person.getUsername()).isPresent();
     	if(userexist) {
     		 throw new IllegalStateException("username already taken");
     	}
