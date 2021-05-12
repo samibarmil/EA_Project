@@ -1,6 +1,7 @@
 package com.eaProject.demo.controller;
 
 import com.eaProject.demo.domain.*;
+import com.eaProject.demo.repository.PersonRepository;
 import com.eaProject.demo.services.PersonDetailService;
 import com.eaProject.demo.services.PersonService;
 import com.eaProject.demo.util.JWTUtil;
@@ -30,7 +31,8 @@ public class AuthController {
     JWTUtil jwtUtil;
     @Autowired
     PersonService personService;
-
+    @Autowired 
+    private PersonRepository personrepository;
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
         try{
@@ -52,6 +54,10 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody Person person) {
+        boolean userexist = personrepository.findusername(person.getUsername()).isPresent();
+    	if(userexist) {
+    		 throw new IllegalStateException("username already taken");
+    	}
         PersonRole[] personRoles = new PersonRole[] {new PersonRole(Role.CLIENT)};
         person.setPersonRole(Arrays.asList(personRoles));
         Person personWithId = null;
