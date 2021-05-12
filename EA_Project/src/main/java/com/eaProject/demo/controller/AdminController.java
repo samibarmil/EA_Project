@@ -2,16 +2,13 @@ package com.eaProject.demo.controller;
 
 import com.eaProject.demo.domain.*;
 import com.eaProject.demo.exceptions.UnprocessableEntityException;
-import com.eaProject.demo.services.AppointmentService;
-import com.eaProject.demo.services.EmailService;
-import com.eaProject.demo.services.NotificationAction;
-import com.eaProject.demo.services.PersonService;
-import com.eaProject.demo.services.SessionService;
+import com.eaProject.demo.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
@@ -28,6 +25,8 @@ public class AdminController {
 	private AppointmentService appointmentService;
 	@Autowired
 	private EmailService emailservice;
+	@Autowired
+	private RoleService roleService;
 
 	@RequestMapping("/add-provider")
 	public ResponseEntity<?> addProvider(@RequestBody Person person) throws UnprocessableEntityException {
@@ -38,6 +37,31 @@ public class AdminController {
 		emailservice.DomainEmailNotification(person, NotificationAction.CREATED, personWithId);
 		personWithId.setPassword(null);
 		return ResponseEntity.ok(personWithId);
+	}
+
+	@PatchMapping("/persons/{id}/promote")
+	public ResponseEntity<?> promotePerson(@PathVariable Long id, @RequestBody() PromoteRequest promoteRequest )
+			throws Exception {
+		Person person = personService.getPersonById(id);
+		Role role = roleService.getRoleByName(promoteRequest.getRoleName());
+		List<PersonRole> personRoleList =  person.getPersonRole();
+
+		// check if person already have the role
+		checkIfRoleAlreadyGranted(role, personRoleList);
+
+		personRoleList.add(new PersonRole(role));
+		person.setPersonRole(personRoleList);
+
+		return ResponseEntity.ok(personService.updatePerson(person.getId(), person));
+	}
+
+	private void checkIfRoleAlreadyGranted(Role role, List<PersonRole> personRoleList) throws Exception {
+		PersonRole similarRole = personRoleList.stream()
+				.filter(personRole -> personRole.getRole().equals(role))
+				.findFirst()
+				.orElse(null);
+		if(similarRole != null)
+			throw new Exception("Person already have the role.");
 	}
 
 	// Todo: GET /sessions?futureOnly=true
@@ -130,11 +154,7 @@ public class AdminController {
 	// Todo: GET /persons/{id}
 	@GetMapping("/persons/{id}")
 	public ResponseEntity<?> getPersonById(@PathVariable(value = "id") Long id){
-		Person person = personService.getPersonById(id);
-		if(person == null) {
-			throw new EntityNotFoundException(String.format("Person with id : %d not found.", id));
-		}
-		return ResponseEntity.ok(person);
+		return ResponseEntity.ok(personService.getPersonById(id));
 	}
 
 	// Todo: UPDATE /persons/{id}

@@ -58,7 +58,9 @@ public class PersonService {
     }
     
     public Person getPersonById(Long id){
-    	return personRepository.findById(id).orElse(null);
+    	return personRepository.findById(id)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(String.format("Person with id : %d not found.", id)));
     }
     
     public Collection<Person> getAllPersons(){
@@ -67,12 +69,9 @@ public class PersonService {
     
     public Person updatePerson(Long id, Person person) throws UnprocessableEntityException {
 
-		if(!id.equals(person.getId())) throw new UnprocessableEntityException("Person id dose not match.");
+		if(!id.equals(person.getId()))
+		    throw new UnprocessableEntityException("Person id dose not match.");
 
-		Person p = personRepository.findById(id)
-				.orElseThrow(() ->
-						new EntityNotFoundException(String.format("Person with id : %d not found", id))
-				);
 		personRepository.save(person);
 		return person;
     }
