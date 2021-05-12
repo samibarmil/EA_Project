@@ -3,6 +3,8 @@ package com.eaProject.demo.controller;
 import com.eaProject.demo.domain.AppointmentStatus;
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
+import com.eaProject.demo.exceptions.UnauthorizedAccessException;
+import com.eaProject.demo.exceptions.UnprocessableEntityException;
 import com.eaProject.demo.services.PersonService;
 import com.eaProject.demo.services.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,23 +43,17 @@ public class ClientController {
 
 	// endpoint for creating appointment by Orgil
 	@PostMapping("/sessions/{id}/appointments")
-	public ResponseEntity<?> createAppointment(@PathVariable Long id) {
+	public ResponseEntity<?> createAppointment(@PathVariable Long id)
+			throws UnprocessableEntityException {
 
 		Person currentUser = personService.getCurrentUser();
 		if (!appointmentService.isFirstAppointmentOfSession(id, currentUser))
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Only one appointment allowed for a session");
+			throw new UnprocessableEntityException("Only one appointment allowed for a session");
 
-		Session session = sessionService.getSessionById(id).orElse(null);
-		if (session == null)
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(String.format("Session with id : %d not found!", id));
+		Session session = sessionService.getSessionById(id);
 
-		Appointment appointment = null;
-		try {
-			appointment = appointmentService.addAppointment(new Appointment(session, currentUser));
-		} catch (RuntimeException e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Appointment sessions is not in the future.");
-		}
+		Appointment appointment = appointmentService.addAppointment(new Appointment(session, currentUser));
+
 		emailService.EmailNotification(currentUser, NotificationAction.CREATED, "Appointment");
 		appointment.getClient().setPassword(null);
 		return ResponseEntity.ok(appointment);
@@ -65,40 +61,40 @@ public class ClientController {
 
 	// endpoint for deleting an appointment by Orgil
 	@DeleteMapping("/appointments/{id}")
-	public ResponseEntity<?> deleteAppointment(@PathVariable(name = "id") Long appointmentId) {
+	public ResponseEntity<?> deleteAppointment(@PathVariable(name = "id") Long appointmentId)
+			throws UnprocessableEntityException, UnauthorizedAccessException {
 		Person currentUser = personService.getCurrentUser();
-		Appointment appointment = null;
-		try {
-			appointment = appointmentService.getAppointment(appointmentId);
-		} catch (Exception exception) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+		Appointment appointment = appointmentService.getAppointment(appointmentId);
+
+		if (!sessionService.isSessionInAfter48HoursOrMore(appointment.getSession())) {
+			throw new UnprocessableEntityException("Can not access session starts in less than 48 hours.");
 		}
 
 		if (!appointmentService.isOwnerOfAppointment(currentUser, appointment))
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You do not have right to delete");
-		appointmentService.deleteAppointmentClient(appointmentId);
+			throw new UnauthorizedAccessException("You do not have right to delete");
+		appointmentService.deleteAppointment(appointment);
 		emailService.EmailNotification(currentUser, NotificationAction.DELETED, "Appointment");
 		return ResponseEntity.ok("count : 1");
 	}
 
 	@PutMapping("/appointments/{id}/cancel")
-	public ResponseEntity<?> update(@PathVariable(value = "id") Long id) throws Exception {
-
+	public ResponseEntity<?> update(@PathVariable(value = "id") Long id)
+			throws UnprocessableEntityException, UnauthorizedAccessException {
 		Person currentUser = personService.getCurrentUser();
 		Appointment appointment = appointmentService.getAppointment(id);
 
 		// check if the appointment belongs to the user
 		if (!appointmentService.isOwnerOfAppointment(currentUser, appointment))
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You do not have right to cancel");
+			throw new UnauthorizedAccessException("You do not have right to cancel");
 
 		// Appointments can be cancelled or modified up to 48 hours before the session
-		if (!sessionService.isSessionInFuture(appointment.getSession()))
+		if (!sessionService.isSessionInAfter48HoursOrMore(appointment.getSession()))
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 					.body("Can not update appointments of passed sessions.");
 		appointment.setAppointmentStatus(AppointmentStatus.CANCELED);
-
+		Appointment updatedAppointment = appointmentService.updateFromClient(id, appointment);
 		emailService.EmailNotification(currentUser, NotificationAction.UPDATED, "Appointment");
-		return ResponseEntity.ok(appointmentService.updateFromClient(id, appointment));
+		return ResponseEntity.ok(updatedAppointment);
 	}
 
 	// All appointments requested by the client

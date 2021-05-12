@@ -3,8 +3,10 @@ package com.eaProject.demo.services;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 
+import com.eaProject.demo.exceptions.UnprocessableEntityException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,71 +26,41 @@ public class AppointmentService {
 
 	@Autowired
 	private SessionRepository sessionRepository;
+	@Autowired
+	private SessionService sessionService;
 
 	// Service for adding an appointment by Orgil
-	public Appointment addAppointment(Appointment appointment) {
+	public Appointment addAppointment(Appointment appointment) throws UnprocessableEntityException {
 		long sessId = appointment.getSession().getId();
 		Session session = sessionRepository.getOne(sessId);
 		if (session.getDate().compareTo(new Date()) > 0) {
 			return appointmentRepository.save(appointment);
 		} else {
-			throw new RuntimeException("Appointment not in the future");
+			throw new UnprocessableEntityException("Can not access session starts in less than 48 hours.");
 		}
 	}
 
-	// Service for deleting an appointment for Client by Orgil
-	public void deleteAppointmentClient(Long id) {
-		boolean hasApprovedAppointment = false;
-		
-		if(appointmentRepository.getOne(id)!=null) {
-			Appointment appointment = appointmentRepository.getOne(id);
-			
-			// check if cancelling appointment was approved or not
-			if(appointment.getAppointmentStatus()==AppointmentStatus.APPROVED) {
-				hasApprovedAppointment = true;
-			}
-			
-			// calculate how much time left until session
-			Date sessionDate = appointment.getSession().getDate();
-			long diffInMillies = Math.abs(sessionDate.getTime() - new Date().getTime());
-			long diff = TimeUnit.HOURS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+	public void deleteAppointment(Appointment appointment) {
 
-			// if session is in more than 48 hours, cancel
-			if (diff > 48) {
-				appointmentRepository.deleteById(id);
-			} else {
-				throw new RuntimeException("Less than 48 hours");
-			}
-			
-			List<Appointment> appointments = new ArrayList<>();
-			appointments = appointmentRepository.findAllByOrderByIdAsc();
+		appointmentRepository.deleteById(appointment.getId());
 
-			//if deleted appointment was approved then make next appointment approved (Orgil)
-			if(hasApprovedAppointment && appointments!=null) {
-				Appointment nextAppointment = appointments.get(0);
-				nextAppointment.setAppointmentStatus(AppointmentStatus.APPROVED);
-				appointmentRepository.save(appointment);
-			}
-      
-		}else {
-			throw  new ResourceNotFoundException("Appointment with that id doesn't exist", "id=",id);
+		//if deleted appointment was approved then make next appointment approved (Orgil)
+		if(appointment.getAppointmentStatus().equals(AppointmentStatus.APPROVED)) {
+			approveNextAppointment(appointment.getSession());
 		}
-		
-
 	}
 
-	// Service for deleting an appointment for Admin by Orgil
-	public void deleteAppointmentAdmin(Long id) {
-		Appointment appointment = appointmentRepository.getOne(id);
-		if(appointment!=null) {
-			appointmentRepository.deleteById(id);
-		}else {
-			throw  new ResourceNotFoundException("Appointment with that id doesn't exist", "id=",id);
+	private void approveNextAppointment(Session session) {
+		List<Appointment> appointments =session.getAppointments();
+		if(appointments.size() > 0) {
+			Appointment nextAppointment = appointments.get(0);
+			nextAppointment.setAppointmentStatus(AppointmentStatus.APPROVED);
+			appointmentRepository.save(nextAppointment);
 		}
-		
 	}
-	
-	public Appointment updateFromClient(Long id, @Valid Appointment appointment) throws Exception {
+
+	public Appointment updateFromClient(Long id, @Valid Appointment appointment)
+			throws UnprocessableEntityException {
 		if(appointmentRepository.getOne(id)!=null) {
 			Date getsessiondate = appointmentRepository.getOne(id).getSession().getDate();
 			long m = Math.abs(getsessiondate.getTime() - new Date().getTime());
@@ -105,29 +77,27 @@ public class AppointmentService {
 			    return appointmentupdated;
 			}
 			else {
-				throw  new ResourceNotFoundException("Appointments can be cancelled or modified up to 48 hours before the session", "id=",id);
+				throw  new UnprocessableEntityException("Appointments can be cancelled or modified up to 48 hours before the session");
 			}
-			
-		}else {
-			 throw  new ResourceNotFoundException("Appointment with that id doesn't exist", "id=",id);
+
 		}
-	    
+		else {
+			 throw  new EntityNotFoundException(String.format("Appointment with id : %d doesn't exist",id));
+		}
+
 	}
 
-	public Appointment updatefromadmin(Long id,@Valid Appointment appointment) throws Exception {
+	public Appointment updateFromAdmin(Long id, @Valid Appointment appointment) {
 
-			Appointment appointments=  appointmentRepository.findById(id)
-					.orElseThrow(() -> new ResourceNotFoundException("Appointment with that id doesn't exist", "id",id));
-			appointments.setAppointmentStatus(appointment.getAppointmentStatus());
+			Appointment newAppointment=  appointmentRepository.findById(id)
+					.orElseThrow(() -> new EntityNotFoundException(String.format("Appointment with id: %d doesn't exist", id)));
+			newAppointment.setAppointmentStatus(appointment.getAppointmentStatus());
 			//appointments.setClient(appointment.getClient());  //--> TO DISCUSS
-			appointments.setSession(appointment.getSession());
+			newAppointment.setSession(appointment.getSession());
 			//appointments.setSession(appointment.get);
-
-		    Appointment appointmentupdated=  appointmentRepository.save(appointments);
-			
-		    return appointmentupdated;
+		    return updateAppointment(newAppointment);
 	}
-		
+
 	public List<Appointment> GetAllAdmin() {
 			List<Appointment> list = appointmentRepository.findAll();
 			return list;
@@ -155,11 +125,11 @@ public class AppointmentService {
 		return  client.getUsername().equals(appointment.getClient().getUsername());
 	}
 
-	public Appointment getAppointment(Long appointmentId) throws Exception {
+	public Appointment getAppointment(Long appointmentId) {
 		Appointment appointment = appointmentRepository.findById(appointmentId)
 				.orElse(null);
 		if(appointment == null)
-			throw new Exception(String.format("Appointment with id : %d not found", appointmentId));
+			throw new EntityNotFoundException(String.format("Appointment with id : %d not found", appointmentId));
 		return appointment;
 	}
 

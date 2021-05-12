@@ -2,16 +2,20 @@ package com.eaProject.demo.services;
 
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
+import com.eaProject.demo.exceptions.UnprocessableEntityException;
 import com.eaProject.demo.repository.PersonRepository;
 
 import java.util.Collection;
 
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import javax.persistence.EntityNotFoundException;
 
 @Service
 public class PersonService {
@@ -21,13 +25,12 @@ public class PersonService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-
-    public Person addPerson(Person person) throws Exception {
+    public Person addPerson(Person person) throws UnprocessableEntityException {
         if (!isEmailUnique(person))
-            throw new Exception("Email must be unique.");
+            throw new UnprocessableEntityException("Email must be unique.");
 
         if (!isUsernameUnique(person))
-            throw new Exception("Username must be unique.");
+            throw new UnprocessableEntityException("Username must be unique.");
 
         person.setPassword(passwordEncoder.encode(person.getPassword()));
         this.personRepository.save(person);
@@ -39,7 +42,7 @@ public class PersonService {
                 .getPrincipal();
         return  personRepository
                 .findTopByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
     public Boolean isEmailUnique(Person person) {
@@ -62,16 +65,16 @@ public class PersonService {
     	return personRepository.findAll();
     }
     
-    public Person updatePerson(Long id, Person person) throws Exception {
+    public Person updatePerson(Long id, Person person) throws UnprocessableEntityException {
 
-		if(!id.equals(person.getId())) throw new Exception("Session id dose not match.");
+		if(!id.equals(person.getId())) throw new UnprocessableEntityException("Person id dose not match.");
 
 		Person p = personRepository.findById(id)
 				.orElseThrow(() ->
-						new Exception(String.format("Session with id : %d not found", id))
+						new EntityNotFoundException(String.format("Person with id : %d not found", id))
 				);
 		personRepository.save(person);
 		return person;
     }
-    
+
 }

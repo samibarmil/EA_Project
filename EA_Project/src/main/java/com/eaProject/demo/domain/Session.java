@@ -31,7 +31,7 @@ public class Session {
 	private Person provider;
 	
 	@Temporal(TemporalType.DATE)
-	//@Future --> to discuss
+	@Future
 	private Date date;
 	private Double duration;
 	@Temporal(TemporalType.TIME)
@@ -44,4 +44,14 @@ public class Session {
 	@JsonIgnore
 	private List<Appointment> appointments;
 
+	@Override
+	public String toString() {
+		return "Session{" +
+				"id=" + id +
+				", date=" + date +
+				", duration=" + duration +
+				", startTime=" + startTime +
+				", location='" + location + '\'' +
+				'}';
+	}
 }
