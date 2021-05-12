@@ -7,17 +7,11 @@ import com.eaProject.demo.services.EmailService;
 import com.eaProject.demo.services.NotificationAction;
 import com.eaProject.demo.services.PersonService;
 import com.eaProject.demo.services.SessionService;
-import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
@@ -99,7 +93,7 @@ public class AdminController {
 
 	// Todo: GET /appointments
 	@GetMapping("/appointments")
-	ResponseEntity<?> getAppointments() {
+	ResponseEntity<?> getAppointments() throws Exception {
 		return ResponseEntity.ok(appointmentService.getAllAppointment());
 	}
 

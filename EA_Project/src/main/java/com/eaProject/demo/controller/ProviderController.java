@@ -8,7 +8,6 @@ import com.eaProject.demo.exceptions.UnprocessableEntityException;
 import com.eaProject.demo.services.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,10 +33,10 @@ public class ProviderController {
 		Person currentUser = personService.getCurrentUser();
 		if(futureOnly){
 			Date today = new Date();
-			List<Session> sessions = sessionService.getSessionsByProvider(currentUser)
+			return ResponseEntity.ok(sessionService.getSessionsByProvider(currentUser)
 					.stream()
 					.filter(session -> session.getDate().after(today))
-					.collect(Collectors.toList());
+					.collect(Collectors.toList()));
 		}
 		List<Session> sessions = sessionService.getSessionsByProvider(currentUser);
 		return ResponseEntity.ok(sessions);
