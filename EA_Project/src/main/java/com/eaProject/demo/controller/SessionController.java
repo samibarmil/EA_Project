@@ -28,7 +28,7 @@ public class SessionController {
 	// Single Item
 	@GetMapping(path = "/{id}")
 	Session getSession(@PathVariable long id) throws Exception {
-		return sessionService.getSessionById(id).orElseThrow(() -> new Exception("Id not found"));
+		return sessionService.getSessionById(id);
 	}
 
 	@PutMapping("/edit/{id}")
