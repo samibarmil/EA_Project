@@ -53,7 +53,6 @@ public class Session {
 				", duration=" + duration +
 				", startTime=" + startTime +
 				", location='" + location + '\'' +
-				", appointments=" + appointments +
 				'}';
 	}
 }

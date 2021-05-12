@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -52,16 +53,9 @@ public class AdminController {
 
 	// Todo: GET /sessions?futureOnly=true
 	@GetMapping("/sessions")
-	ResponseEntity<?> getSession(@RequestParam("futureOnly") boolean futureOnly) throws Exception {
+	ResponseEntity<?> getSession(@RequestParam(required = false, name = "futureOnly") boolean futureOnly) throws Exception {
 		if(futureOnly) {
-			Date date = new Date();
-			List<Session> sessionList = sessionService.getAllSessions().stream().filter(session -> {
-				return session.getDate().after(date);
-			}).collect(Collectors.toList());
-			for(Session session: sessionList){
-				System.out.println(session.getDate().toString());
-			}
-			return ResponseEntity.ok(sessionList);
+			return ResponseEntity.ok(sessionService.getAllFutureSessions());
 		}
 		return ResponseEntity.ok(sessionService.getAllSessions());
 	}
@@ -75,17 +69,22 @@ public class AdminController {
 	// Todo: GET /sessions/{id}/appointments
 
 	// Todo: DELETE /sessions/{id}
-	@DeleteMapping("/sessions/delete/{id}")
-	void deleteSession(@PathVariable long id) {
+	@DeleteMapping("/sessions/{id}")
+	ResponseEntity<?> deleteSession(@PathVariable long id) {
+		Optional<Session> session = sessionService.getSessionById(id);
 		sessionService.deleteSessionById(id);
-		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.DELETED, sessionService.getSessionById(id));
+		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.DELETED, session.get());
+		return ResponseEntity.ok("Delete Successfully");
 	}
 
-	// todo: EDIT /sessions/edit/{id}
-	@PutMapping("/sessions/edit/{id}")
+	// todo: EDIT /sessions/{id}
+	@PutMapping("/sessions/{id}")
 	ResponseEntity<?> editSession(@RequestBody Session editSession, @PathVariable long id) throws Exception {
-		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.UPDATED, editSession);
-		return ResponseEntity.ok(sessionService.editSession(id, editSession));
+		Session session = sessionService.getSessionById(id).get();
+		editSession.setProvider(session.getProvider());
+		Session updateSession = sessionService.editSession(id, editSession);
+		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.UPDATED, updateSession);
+		return ResponseEntity.ok(updateSession);
 	}
 
 	// todo: ADD /sessions/add
@@ -106,7 +105,7 @@ public class AdminController {
 	}
 
 	// Todo: UPDATE /appointments/{id}
-	@PutMapping("/client/appointments/{id}")
+	@PutMapping("/appointments/{id}")
 	public Appointment update(@PathVariable(value = "id") Long id, @Valid @RequestBody Appointment appointment)
 			throws Exception {
 		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.UPDATED, appointment);
@@ -122,13 +121,13 @@ public class AdminController {
 		appointmentService.deleteAppointmentClient(appointmentId);
 	}
 
-	//GET /persons
+	// Todo: GET /persons
 	@GetMapping("/persons")
 	public ResponseEntity<?> getAllPersons() {
 		return ResponseEntity.ok(personService.getAllPersons());
 	}
 
-	//GET /persons/{id}
+	// Todo: GET /persons/{id}
 	@GetMapping("/persons/{id}")
 	public ResponseEntity<?> getPersonById(@PathVariable(value = "id") Long id){
 		try {
@@ -139,7 +138,7 @@ public class AdminController {
 		}
 	}
 
-	//UPDATE /persons/{id}
+	// Todo: UPDATE /persons/{id}
 	@PutMapping("/persons/{id}")
 	public ResponseEntity<?> updatePerson(@PathVariable(value = "id")Long id, @RequestBody Person person){
 		try {
@@ -151,7 +150,6 @@ public class AdminController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
 		}
 	}
-	// Todo: UPDATE /persons/{id}
 
     // Todo: UPDATE /appointments/{id}/approve
     @PatchMapping("/appointments/{id}/approve")
