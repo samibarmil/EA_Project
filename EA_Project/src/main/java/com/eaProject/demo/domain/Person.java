@@ -35,7 +35,7 @@ public class Person {
 	@NotNull
 	@Size(min =6,max=30)
 	private String username;
-	@JsonIgnore
+	//@JsonIgnore
 	@NotEmpty
 	@NotNull
 	@Size(min =6,max=30)
