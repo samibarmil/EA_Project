@@ -29,7 +29,7 @@ public class ClientController {
 
 	@GetMapping("/sessions")
 	public ResponseEntity<?> getSessions(@RequestParam Boolean futureOnly) {
-		if(futureOnly)
+		if (futureOnly)
 			return ResponseEntity.ok(sessionService.getAllFutureSessions());
 		return ResponseEntity.ok(sessionService.getAllSessions());
 	}
@@ -58,15 +58,14 @@ public class ClientController {
 		} catch (RuntimeException e) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Appointment sessions is not in the future.");
 		}
-		emailService.EmailNotification(currentUser , NotificationAction.CREATED, "Appointment");
+		emailService.EmailNotification(currentUser, NotificationAction.CREATED, "Appointment");
 		appointment.getClient().setPassword(null);
 		return ResponseEntity.ok(appointment);
 	}
 
 	// endpoint for deleting an appointment by Orgil
 	@DeleteMapping("/appointments/{id}")
-	public ResponseEntity<?> deleteAppointment(@RequestHeader(value="User-Agent") String userAgent,
-								  @PathVariable(name = "id") Long appointmentId) {
+	public ResponseEntity<?> deleteAppointment(@PathVariable(name = "id") Long appointmentId) {
 		Person currentUser = personService.getCurrentUser();
 		Appointment appointment = null;
 		try {
@@ -76,8 +75,9 @@ public class ClientController {
 		}
 
 		if (!appointmentService.isOwnerOfAppointment(currentUser, appointment))
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You do not have right to delete");
 		appointmentService.deleteAppointmentClient(appointmentId);
-		emailService.EmailNotification(currentUser , NotificationAction.DELETED, "Appointment");
+		emailService.EmailNotification(currentUser, NotificationAction.DELETED, "Appointment");
 		return ResponseEntity.ok("count : 1");
 	}
 
@@ -110,7 +110,7 @@ public class ClientController {
 	}
 
 	// appointment of client
-	@GetMapping(path="/appointments/{id}",produces = "application/json; charset=UTF-8")
+	@GetMapping(path = "/appointments/{id}", produces = "application/json; charset=UTF-8")
 	@ResponseBody
 	public ResponseEntity<?> getAppointment(@PathVariable Long id) {
 		Person currentPerson = personService.getCurrentUser();
