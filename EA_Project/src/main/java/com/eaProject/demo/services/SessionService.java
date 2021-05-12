@@ -3,10 +3,13 @@ package com.eaProject.demo.services;
 import com.eaProject.demo.domain.Appointment;
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
+import com.eaProject.demo.exceptions.UnauthorizedAccessException;
+import com.eaProject.demo.exceptions.UnprocessableEntityException;
 import com.eaProject.demo.repository.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,11 +35,6 @@ public class SessionService {
 		return sessionRepository.findByProvider(provider);
 	}
 
-	// Service for get Session by Id
-	public Optional<Session> getSessionById(long id){
-		return sessionRepository.findById(id);
-	}
-
 	// Service for get Sessions by Provider
 	public List<Session> getSessionByProvider(Person provider){
 		return sessionRepository.findByProvider(provider);
@@ -54,42 +52,44 @@ public class SessionService {
 	}
 
 	// Service for editing Session
-	public Session editSession(Long sessionId, Session updatedSession) throws Exception {
+	public Session editSession(Long sessionId, Session updatedSession) throws UnprocessableEntityException {
 
-		if(!sessionId.equals(updatedSession.getId())) throw new Exception("Session id dose not match.");
+		if(!sessionId.equals(updatedSession.getId())) throw new UnprocessableEntityException("Session id dose not match.");
 
-		Session session = sessionRepository.findById(sessionId)
-				.orElseThrow(() ->
-						new Exception(String.format("Session with id : %d not found", sessionId))
-				);
+		Session session = getSessionById(sessionId);
 		sessionRepository.save(updatedSession);
 		return updatedSession;
 	}
 
-	public void removeSessionFromProvider(Long sessionId, Person provider) throws Exception {
+	public void removeSessionFromProvider(Long sessionId, Person provider) {
 		Session session = sessionRepository.findTopByIdAndProvider(sessionId, provider)
-				.orElseThrow(() -> new Exception(String.format("Session with id : %d is not found under given provider.", sessionId)));
+				.orElseThrow(() -> new EntityNotFoundException(
+						String.format("Session by id : %d is not found under provider %s.",
+								sessionId, provider.getUsername()))
+				);
 		this.deleteSessionById(sessionId);
 	}
 
-
-	public List<Appointment> getSessionAppointments(Long id, Person currentUser) throws Exception {
-		Session session = sessionRepository.findById(id)
-				.orElseThrow(() -> new Exception(String.format("Session with id : %d not found", id)));
+	public List<Appointment> getSessionAppointments(Long id, Person currentUser) throws UnauthorizedAccessException {
+		Session session = getSessionById(id);
 
 		if(!session.getProvider().getUsername().equals(currentUser.getUsername()))
-			throw new Exception("You have no access to this session.");
+			throw new UnauthorizedAccessException("You have no access to this session.");
 
 		return session.getAppointments();
 	}
 	
 	
 	//For admin use only
-	public List<Appointment> getSessionAppointments(Long id) throws Exception {
-		Session session = sessionRepository.findById(id)
-				.orElseThrow(() -> new Exception(String.format("Session with id : %d not found", id)));
-
+	public List<Appointment> getSessionAppointments(Long id) {
+		Session session = getSessionById(id);
 		return session.getAppointments();
+	}
+
+	public Session getSessionById(Long id) {
+		return sessionRepository.findById(id)
+				.orElseThrow(() ->
+						new EntityNotFoundException(String.format("Session with id : %d not found", id)));
 	}
 
 	public Boolean doesSessionBelongsToProvider(Long sessionId, Person provider) {
@@ -98,7 +98,7 @@ public class SessionService {
 		return session != null;
 	}
 
-	public Boolean isSessionInFuture(Session session) {
+	public Boolean isSessionInAfter48HoursOrMore(Session session) {
 		return  session.getDate().after(java.sql.Date.valueOf(LocalDate.now().plusDays(2)));
 	}
 }
