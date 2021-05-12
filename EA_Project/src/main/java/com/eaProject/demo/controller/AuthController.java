@@ -31,8 +31,7 @@ public class AuthController {
     JWTUtil jwtUtil;
     @Autowired
     PersonService personService;
-    @Autowired 
-    PersonRepository personrepository;
+
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
         try{
@@ -54,10 +53,6 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody Person person) {
-        boolean userexist = personrepository.findTopByUsername(person.getUsername()).isPresent();
-    	if(userexist) {
-    		 throw new IllegalStateException("username already taken");
-    	}
         PersonRole[] personRoles = new PersonRole[] {new PersonRole(Role.CLIENT)};
         person.setPersonRole(Arrays.asList(personRoles));
         Person personWithId = null;
