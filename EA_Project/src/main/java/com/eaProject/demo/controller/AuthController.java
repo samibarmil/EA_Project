@@ -32,7 +32,7 @@ public class AuthController {
     @Autowired
     PersonService personService;
     @Autowired 
-    private PersonRepository personrepository;
+    PersonRepository personrepository;
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
         try{
@@ -54,7 +54,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody Person person) {
-        boolean userexist = personrepository.findusername(person.getUsername()).isPresent();
+        boolean userexist = personrepository.findTopByUsername(person.getUsername()).isPresent();
     	if(userexist) {
     		 throw new IllegalStateException("username already taken");
     	}
