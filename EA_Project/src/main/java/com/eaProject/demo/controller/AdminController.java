@@ -151,4 +151,25 @@ public class AdminController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
 		}
 	}
+	// Todo: UPDATE /persons/{id}
+
+    // Todo: UPDATE /appointments/{id}/approve
+    @PatchMapping("/appointments/{id}/approve")
+    public ResponseEntity<?> approveAppointment(@PathVariable Long id) {
+        Appointment appointment = null;
+        try {
+            appointment = appointmentService.getAppointment(id);
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+        }
+        if(appointment == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(String.format("Appointment with id : %d not found", id));
+
+        if(appointmentService.hasApprovedAppointment(appointment.getSession().getId())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The session has approved appointment.");
+        }
+        appointment.setAppointmentStatus(AppointmentStatus.APPROVED);
+        return ResponseEntity.ok(appointmentService.updateAppointment(appointment));
+    }
 }

@@ -1,11 +1,9 @@
 package com.eaProject.demo.controller;
 
+import com.eaProject.demo.domain.Appointment;
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
-import com.eaProject.demo.services.EmailService;
-import com.eaProject.demo.services.NotificationAction;
-import com.eaProject.demo.services.PersonService;
-import com.eaProject.demo.services.SessionService;
+import com.eaProject.demo.services.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,6 +22,8 @@ public class ProviderController {
 	private SessionService sessionService;
 	@Autowired
 	private EmailService emailservice;
+	@Autowired
+	private AppointmentService appointmentService;
 
 	@GetMapping(path = "/sessions", produces = "application/json")
 	public ResponseEntity<?> getSessions() { // Todo: ?futureOnly=true
@@ -85,6 +85,23 @@ public class ProviderController {
 		Person currentUser = personService.getCurrentUser();
 		try {
 			return ResponseEntity.ok(sessionService.getSessionAppointments(id, currentUser));
+		} catch (Exception exception) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+		}
+	}
+
+	@GetMapping("/sessions/{id}/approved-appointment")
+	ResponseEntity<?> getSessionApprovedAppointment(@PathVariable Long id) {
+		Person currentUser = personService.getCurrentUser();
+		Appointment appointment = null;
+		try {
+			appointment = appointmentService.getApprovedAppointment(id);
+			if(appointment != null &&
+					!currentUser.getUsername().equals(
+							appointment.getSession().getProvider().getUsername())
+			)
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized to access this session.");
+			return ResponseEntity.ok(appointment);
 		} catch (Exception exception) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
 		}

@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import javax.transaction.Transactional;
 
+import com.eaProject.demo.domain.AppointmentStatus;
 import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,4 +24,7 @@ public interface AppointmentRepository  extends JpaRepository<Appointment, Long>
 	 @Query("SELECT a FROM Appointment a WHERE a.session.id = :sessionId AND a.client.id = :clientId")
 	 public Optional<Appointment> findTopBySessionAndClient(@Param("sessionId") Long sessionId,
 															@Param("clientId") Long clientId);
+	@Query("SELECT a FROM Appointment a WHERE a.session.id = :sessionId AND a.appointmentStatus = :status")
+	 public Optional<Appointment> findTopBySessionAndAppointmentStatus(@Param("sessionId") Long sessionId,
+																	   @Param("status") AppointmentStatus status);
 }

@@ -88,7 +88,7 @@ public class AppointmentService {
 		
 	}
 	
-	public Appointment updatefromclient(Long id,@Valid Appointment appointment) throws Exception {
+	public Appointment updateFromClient(Long id, @Valid Appointment appointment) throws Exception {
 		if(appointmentRepository.getOne(id)!=null) {
 			Date getsessiondate = appointmentRepository.getOne(id).getSession().getDate();
 			long m = Math.abs(getsessiondate.getTime() - new Date().getTime());
@@ -161,5 +161,19 @@ public class AppointmentService {
 		if(appointment == null)
 			throw new Exception(String.format("Appointment with id : %d not found", appointmentId));
 		return appointment;
+	}
+
+	public Appointment updateAppointment(Appointment appointment) {
+		return appointmentRepository.save(appointment);
+	}
+
+	public Appointment getApprovedAppointment(Long sessionId) {
+		return appointmentRepository
+				.findTopBySessionAndAppointmentStatus(sessionId, AppointmentStatus.APPROVED)
+				.orElse(null);
+	}
+
+	public Boolean hasApprovedAppointment(Long sessionId) {
+		return  getApprovedAppointment(sessionId) != null;
 	}
 }

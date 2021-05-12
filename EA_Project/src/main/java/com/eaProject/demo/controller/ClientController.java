@@ -98,7 +98,7 @@ public class ClientController {
 		appointment.setAppointmentStatus(AppointmentStatus.CANCELED);
 
 		emailService.EmailNotification(currentUser, NotificationAction.UPDATED, "Appointment");
-		return ResponseEntity.ok(appointmentService.updatefromclient(id, appointment));
+		return ResponseEntity.ok(appointmentService.updateFromClient(id, appointment));
 	}
 
 	// All appointments requested by the client
