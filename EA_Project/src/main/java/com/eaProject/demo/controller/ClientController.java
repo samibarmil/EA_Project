@@ -73,7 +73,7 @@ public class ClientController {
 		return ResponseEntity.ok("count : 1");
 	}
 
-	@PutMapping("/appointments/{id}/cancel")
+	@PatchMapping("/appointments/{id}/cancel")
 	public ResponseEntity<?> update(@PathVariable(value = "id") Long id)
 			throws UnprocessableEntityException, UnauthorizedAccessException {
 		Person currentUser = personService.getCurrentPersonByUsername();
