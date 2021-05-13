@@ -1,10 +1,12 @@
 package com.eaProject.demo.util;
 
+import com.eaProject.demo.exceptions.UnauthorizedAccessException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -34,11 +36,6 @@ public class JWTUtil {
                      .compact();
      }
 
-    public Boolean isValid(String token, UserDetails userDetails) {
-         final String username = extractUsername(token);
-         return (username.equals(userDetails.getUsername()) && !isExpired(token));
-    }
-
     public java.util.Date extractExpirationDate(String token) {
          return Jwts.parserBuilder()
                  .setSigningKey(getKey(SECRET_KEY))
@@ -53,12 +50,16 @@ public class JWTUtil {
                 .before(new java.util.Date());
      }
 
-    public String extractUsername(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getKey(SECRET_KEY))
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+    public String extractUsername(String token) throws UnauthorizedAccessException {
+       try {
+           return Jwts.parserBuilder()
+                   .setSigningKey(getKey(SECRET_KEY))
+                   .build()
+                   .parseClaimsJws(token)
+                   .getBody()
+                   .getSubject();
+       } catch (Exception exception) {
+           throw new UnauthorizedAccessException(exception.getMessage());
+       }
      }
 }
