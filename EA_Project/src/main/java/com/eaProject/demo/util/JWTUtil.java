@@ -3,6 +3,7 @@ package com.eaProject.demo.util;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -17,14 +18,19 @@ public class JWTUtil {
 
     @Value("${jwt-secret-key}")
     private String SECRET_KEY;
-    private final SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+
+
+    private  SecretKey getKey (String secretKey) {
+        return  Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+    }
 
     public String generateUserToke(UserDetails userDetails) {
+        System.out.println(SECRET_KEY);
         return Jwts.builder()
                      .setSubject(userDetails.getUsername())
                      .claim("authorities", userDetails.getAuthorities())
                      .setExpiration(Date.valueOf(LocalDate.now().plusWeeks(2)))
-                     .signWith(key, SignatureAlgorithm.HS256)
+                     .signWith(getKey(SECRET_KEY), SignatureAlgorithm.HS256)
                      .compact();
      }
 
@@ -35,7 +41,7 @@ public class JWTUtil {
 
     public java.util.Date extractExpirationDate(String token) {
          return Jwts.parserBuilder()
-                 .setSigningKey(key)
+                 .setSigningKey(getKey(SECRET_KEY))
                  .build()
                  .parseClaimsJws(token)
                  .getBody()
@@ -49,7 +55,7 @@ public class JWTUtil {
 
     public String extractUsername(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(getKey(SECRET_KEY))
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
