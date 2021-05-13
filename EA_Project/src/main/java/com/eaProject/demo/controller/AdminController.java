@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -81,8 +82,17 @@ public class AdminController {
 	@DeleteMapping("/sessions/{id}")
 	ResponseEntity<?> deleteSession(@PathVariable long id) throws Exception {
 		Session session = sessionService.getSessionById(id);
-		if(session.getAppointments().size() != 0)
-			throw new Exception("Cannot delete Session has appointments");
+		if(session.getAppointments().size() != 0) {
+			if(session.getDate().before(new Date())){
+				List<Appointment> sessionAppointments = session.getAppointments();
+				// Delete appointment which relate with session in the past
+				sessionAppointments
+						.forEach(appointment ->{
+								appointment.setSession(null);
+								appointmentService.deleteAppointment(appointment);
+						});
+			} else throw new Exception("Cannot delete Session has appointments");
+		}
 		sessionService.deleteSessionById(id);
 		Person person = personService.getCurrentPersonByUsername();
 		emailservice.DomainEmailNotification(person, NotificationAction.DELETED, session);
