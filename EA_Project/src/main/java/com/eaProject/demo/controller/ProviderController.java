@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,7 +30,7 @@ public class ProviderController {
 	private AppointmentService appointmentService;
 
 	@GetMapping(path = "/sessions", produces = "application/json")
-	ResponseEntity<?> getSession(@RequestParam(required = false, name = "futureOnly") boolean futureOnly) throws Exception {
+	ResponseEntity<?> getSession(@RequestParam(required = false, name = "futureOnly") boolean futureOnly) {
 		Person currentUser = personService.getCurrentPersonByUsername();
 		if(futureOnly){
 			Date today = new Date();
@@ -43,7 +44,7 @@ public class ProviderController {
 	}
 
 	@PostMapping(path = "/sessions", produces = "application/json")
-	ResponseEntity<?> addSession(@RequestBody Session session) {
+	ResponseEntity<?> addSession(@RequestBody @Valid Session session) {
 		Person currentUser = personService.getCurrentPersonByUsername();
 		session.setProvider(currentUser);
 		Session addedSession = sessionService.addSession(session);
@@ -52,11 +53,12 @@ public class ProviderController {
 	}
 
 	@PutMapping(path = "/sessions/{id}")
-	ResponseEntity<?> editSession(@PathVariable Long id, @RequestBody Session session)
+	ResponseEntity<?> editSession(@PathVariable Long id, @Valid @RequestBody Session session)
 			throws UnauthorizedAccessException, UnprocessableEntityException {
 		Person currentUser = personService.getCurrentPersonByUsername();
 		if (!sessionService.doesSessionBelongsToProvider(id, currentUser))
 			throw new UnauthorizedAccessException("You have no access to this session.");
+		// Todo : check if session is past
 		Session edited_session = sessionService.editSession(id, session);
 		emailservice.DomainEmailNotification(currentUser, NotificationAction.UPDATED, edited_session);
 		return ResponseEntity.ok(edited_session);
@@ -76,6 +78,7 @@ public class ProviderController {
 	ResponseEntity<?> deleteSession(@PathVariable Long id) {
 		Person currentUser = personService.getCurrentPersonByUsername();
 		Session session = sessionService.getSessionById(id);
+		// Todo : check if session is past
 		sessionService.removeSessionFromProvider(session.getId(), currentUser);
 		emailservice.DomainEmailNotification(currentUser, NotificationAction.DELETED, session);
 		return ResponseEntity.ok("count : 1");

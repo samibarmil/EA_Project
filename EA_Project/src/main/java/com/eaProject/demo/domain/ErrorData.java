@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Data
 public class ErrorData {
@@ -15,6 +16,7 @@ public class ErrorData {
     private LocalDateTime timestamp;
     private String message;
     private String debugMessage;
+    private Map<String, String> validations;
 
     private ErrorData() {
         timestamp = LocalDateTime.now();
@@ -23,6 +25,13 @@ public class ErrorData {
     public ErrorData(HttpStatus status) {
         this();
         this.status = status;
+    }
+
+    public ErrorData(HttpStatus status, Map<String, String> validations) {
+        this();
+        this.status = status;
+        this.message = "Validation error";
+        this.validations = validations;
     }
 
     public ErrorData(HttpStatus status, Throwable ex) {

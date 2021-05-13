@@ -110,7 +110,7 @@ public class AppointmentService {
 
 	public Appointment getClientAppointment(Long appointmentId, Person client) {
 		return appointmentRepository.findTopByIdAndClient(appointmentId, client)
-				.orElse(null);
+				.orElseThrow(() ->  new EntityNotFoundException(String.format("Appointment with id : %d not found", appointmentId)));
 	}
 
 	public Boolean isFirstAppointmentOfSession(Long sessionId, Person client) {
