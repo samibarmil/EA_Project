@@ -24,6 +24,8 @@ public class PersonService {
     private PersonRepository personRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    PersonDetailService personDetailService;
 
     public Person addPerson(Person person) throws UnprocessableEntityException {
         if (!isEmailUnique(person))
@@ -37,11 +39,9 @@ public class PersonService {
         return person;
     }
 
-    public Person getCurrentUser() {
-        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
+    public Person getPersonByUsername(String userName) {
         return  personRepository
-                .findTopByUsername(userDetails.getUsername())
+                .findTopByUsername(userName)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
@@ -58,7 +58,9 @@ public class PersonService {
     }
     
     public Person getPersonById(Long id){
-    	return personRepository.findById(id).orElse(null);
+    	return personRepository.findById(id)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(String.format("Person with id : %d not found.", id)));
     }
     
     public Collection<Person> getAllPersons(){
@@ -67,14 +69,18 @@ public class PersonService {
     
     public Person updatePerson(Long id, Person person) throws UnprocessableEntityException {
 
-		if(!id.equals(person.getId())) throw new UnprocessableEntityException("Person id dose not match.");
+		if(!id.equals(person.getId()))
+		    throw new UnprocessableEntityException("Person id dose not match.");
 
-		Person p = personRepository.findById(id)
-				.orElseThrow(() ->
-						new EntityNotFoundException(String.format("Person with id : %d not found", id))
-				);
 		personRepository.save(person);
 		return person;
+    }
+
+    public Person getCurrentPersonByUsername() {
+        return getPersonByUsername(personDetailService
+                        .getCurrentUser()
+                        .getUsername()
+                );
     }
 
 }

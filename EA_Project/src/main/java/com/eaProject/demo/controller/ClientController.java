@@ -5,17 +5,13 @@ import com.eaProject.demo.domain.Person;
 import com.eaProject.demo.domain.Session;
 import com.eaProject.demo.exceptions.UnauthorizedAccessException;
 import com.eaProject.demo.exceptions.UnprocessableEntityException;
-import com.eaProject.demo.services.PersonService;
-import com.eaProject.demo.services.SessionService;
+import com.eaProject.demo.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.eaProject.demo.domain.Appointment;
-import com.eaProject.demo.services.AppointmentService;
-import com.eaProject.demo.services.EmailService;
-import com.eaProject.demo.services.NotificationAction;
 
 @RestController
 @RequestMapping("/client")
@@ -46,7 +42,7 @@ public class ClientController {
 	public ResponseEntity<?> createAppointment(@PathVariable Long id)
 			throws UnprocessableEntityException {
 
-		Person currentUser = personService.getCurrentUser();
+		Person currentUser = personService.getCurrentPersonByUsername();
 		if (!appointmentService.isFirstAppointmentOfSession(id, currentUser))
 			throw new UnprocessableEntityException("Only one appointment allowed for a session");
 
@@ -63,7 +59,7 @@ public class ClientController {
 	@DeleteMapping("/appointments/{id}")
 	public ResponseEntity<?> deleteAppointment(@PathVariable(name = "id") Long appointmentId)
 			throws UnprocessableEntityException, UnauthorizedAccessException {
-		Person currentUser = personService.getCurrentUser();
+		Person currentUser = personService.getCurrentPersonByUsername();
 		Appointment appointment = appointmentService.getAppointment(appointmentId);
 
 		if (!sessionService.isSessionInAfter48HoursOrMore(appointment.getSession())) {
@@ -80,7 +76,7 @@ public class ClientController {
 	@PutMapping("/appointments/{id}/cancel")
 	public ResponseEntity<?> update(@PathVariable(value = "id") Long id)
 			throws UnprocessableEntityException, UnauthorizedAccessException {
-		Person currentUser = personService.getCurrentUser();
+		Person currentUser = personService.getCurrentPersonByUsername();
 		Appointment appointment = appointmentService.getAppointment(id);
 
 		// check if the appointment belongs to the user
@@ -101,15 +97,15 @@ public class ClientController {
 	@GetMapping(path = "/appointments", produces = "application/json; charset=UTF-8")
 	@ResponseBody
 	public ResponseEntity<?> GetAll() throws Exception {
-		Person currentPerson = personService.getCurrentUser();
-		return ResponseEntity.ok(appointmentService.getClientAppointments(currentPerson));
+		Person currentUser = personService.getCurrentPersonByUsername();
+		return ResponseEntity.ok(appointmentService.getClientAppointments(currentUser));
 	}
 
 	// appointment of client
 	@GetMapping(path = "/appointments/{id}", produces = "application/json; charset=UTF-8")
 	@ResponseBody
 	public ResponseEntity<?> getAppointment(@PathVariable Long id) {
-		Person currentPerson = personService.getCurrentUser();
-		return ResponseEntity.ok(appointmentService.getClientAppointment(id, currentPerson));
+		Person currentUser = personService.getCurrentPersonByUsername();
+		return ResponseEntity.ok(appointmentService.getClientAppointment(id, currentUser));
 	}
 }

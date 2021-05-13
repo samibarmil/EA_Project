@@ -1,5 +1,6 @@
 package com.eaProject.demo.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.NoArgsConstructor;
 
 import lombok.Data;
@@ -39,6 +40,7 @@ public class Person {
 	@NotEmpty
 	@NotNull
 	@Size(min =6,max=30)
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	private String password;
 	
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "provider")
