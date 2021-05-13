@@ -64,7 +64,7 @@ public class Appointment {
 	@Override
 	public String toString() {
 		return "Appointment [id=" + id + ", appointmentStatus=" + appointmentStatus + ", client=" + client
-				+ ", session=" + session + "]";
+				+ ", session=" + session.getId() + "]";
 	}
 
 	

@@ -80,11 +80,13 @@ public class AdminController {
 
 	// Todo: DELETE /sessions/{id}
 	@DeleteMapping("/sessions/{id}")
-	ResponseEntity<?> deleteSession(@PathVariable long id) {
+	ResponseEntity<?> deleteSession(@PathVariable long id) throws Exception {
 		Session session = sessionService.getSessionById(id);
+		if(session.getAppointments().size() != 0)
+			throw new Exception("Cannot delete Session has appointments");
 		sessionService.deleteSessionById(id);
 		Person person = personService.getCurrentPersonByUsername();
-		emailservice.DomainEmailNotification(person, NotificationAction.DELETED, "");
+		emailservice.DomainEmailNotification(person, NotificationAction.DELETED, session);
 		return ResponseEntity.ok("Delete Successfully");
 	}
 
