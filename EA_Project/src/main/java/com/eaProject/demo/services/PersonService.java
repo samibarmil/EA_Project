@@ -24,6 +24,8 @@ public class PersonService {
     private PersonRepository personRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    PersonDetailService personDetailService;
 
     public Person addPerson(Person person) throws UnprocessableEntityException {
         if (!isEmailUnique(person))
@@ -37,11 +39,9 @@ public class PersonService {
         return person;
     }
 
-    public Person getCurrentUser() {
-        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
+    public Person getPersonByUsername(String userName) {
         return  personRepository
-                .findTopByUsername(userDetails.getUsername())
+                .findTopByUsername(userName)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
@@ -74,6 +74,13 @@ public class PersonService {
 
 		personRepository.save(person);
 		return person;
+    }
+
+    public Person getCurrentPersonByUsername() {
+        return getPersonByUsername(personDetailService
+                        .getCurrentUser()
+                        .getUsername()
+                );
     }
 
 }

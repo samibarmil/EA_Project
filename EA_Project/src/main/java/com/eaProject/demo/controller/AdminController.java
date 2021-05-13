@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 
 @RestController
@@ -84,7 +83,8 @@ public class AdminController {
 	ResponseEntity<?> deleteSession(@PathVariable long id) {
 		Session session = sessionService.getSessionById(id);
 		sessionService.deleteSessionById(id);
-		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.DELETED, "");
+		Person person = personService.getCurrentPersonByUsername();
+		emailservice.DomainEmailNotification(person, NotificationAction.DELETED, "");
 		return ResponseEntity.ok("Delete Successfully");
 	}
 
@@ -95,14 +95,15 @@ public class AdminController {
 		Session session = sessionService.getSessionById(id);
 		editSession.setProvider(session.getProvider());
 		Session updateSession = sessionService.editSession(id, editSession);
-		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.UPDATED, updateSession);
+		Person person = personService.getCurrentPersonByUsername();
+		emailservice.DomainEmailNotification(person, NotificationAction.UPDATED, updateSession);
 		return ResponseEntity.ok(updateSession);
 	}
 
 	// todo: ADD /sessions
 	@PostMapping(path = "/sessions", produces = "application/json")
 	ResponseEntity<?> addSession(@RequestBody Session session) {
-		Person currentUser = personService.getCurrentUser();
+		Person currentUser = personService.getCurrentPersonByUsername();
 		session.setProvider(currentUser);
 		emailservice.DomainEmailNotification(currentUser, NotificationAction.CREATED, session);
 		return ResponseEntity.ok(sessionService.addSession(session));
@@ -132,7 +133,8 @@ public class AdminController {
 	public ResponseEntity<?> update(@PathVariable(value = "id") Long id, @Valid @RequestBody Appointment appointment) {
 		Appointment currentAppointment = appointmentService.getAppointment(id);
 		appointment.getSession().setProvider(currentAppointment.getSession().getProvider());
-		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.UPDATED, appointment);
+		Person currentUser = personService.getCurrentPersonByUsername();
+		emailservice.DomainEmailNotification(currentUser, NotificationAction.UPDATED, appointment);
 		return ResponseEntity.ok(appointmentService.updateFromAdmin(id, appointment));
 	}
 
@@ -142,7 +144,8 @@ public class AdminController {
 			@PathVariable(name = "id") Long appointmentId) {
 		Appointment appointment = appointmentService.getAppointment(appointmentId);
 		appointmentService.deleteAppointment(appointment);
-		emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.DELETED, "");
+		Person person = personService.getCurrentPersonByUsername();
+		emailservice.DomainEmailNotification(person, NotificationAction.DELETED, "");
 	}
 
 	// Todo: GET /persons
@@ -162,7 +165,8 @@ public class AdminController {
 	public ResponseEntity<?> updatePerson(@PathVariable(value = "id")Long id, @RequestBody Person person)
 			throws UnprocessableEntityException {
 			Person p = personService.updatePerson(id, person);
-			emailservice.DomainEmailNotification(personService.getCurrentUser(), NotificationAction.UPDATED, p);
+			Person currentUser = personService.getCurrentPersonByUsername();
+			emailservice.DomainEmailNotification(currentUser, NotificationAction.UPDATED, p);
 			return ResponseEntity.ok(p);
 	}
 

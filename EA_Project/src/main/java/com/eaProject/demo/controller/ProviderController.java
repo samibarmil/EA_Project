@@ -30,7 +30,7 @@ public class ProviderController {
 
 	@GetMapping(path = "/sessions", produces = "application/json")
 	ResponseEntity<?> getSession(@RequestParam(required = false, name = "futureOnly") boolean futureOnly) throws Exception {
-		Person currentUser = personService.getCurrentUser();
+		Person currentUser = personService.getCurrentPersonByUsername();
 		if(futureOnly){
 			Date today = new Date();
 			return ResponseEntity.ok(sessionService.getSessionsByProvider(currentUser)
@@ -44,7 +44,7 @@ public class ProviderController {
 
 	@PostMapping(path = "/sessions", produces = "application/json")
 	ResponseEntity<?> addSession(@RequestBody Session session) {
-		Person currentUser = personService.getCurrentUser();
+		Person currentUser = personService.getCurrentPersonByUsername();
 		session.setProvider(currentUser);
 		Session addedSession = sessionService.addSession(session);
 		emailservice.DomainEmailNotification(currentUser, NotificationAction.CREATED, session);
@@ -54,17 +54,17 @@ public class ProviderController {
 	@PutMapping(path = "/sessions/{id}")
 	ResponseEntity<?> editSession(@PathVariable Long id, @RequestBody Session session)
 			throws UnauthorizedAccessException, UnprocessableEntityException {
-		Person currentUse = personService.getCurrentUser();
-		if (!sessionService.doesSessionBelongsToProvider(id, currentUse))
+		Person currentUser = personService.getCurrentPersonByUsername();
+		if (!sessionService.doesSessionBelongsToProvider(id, currentUser))
 			throw new UnauthorizedAccessException("You have no access to this session.");
 		Session edited_session = sessionService.editSession(id, session);
-		emailservice.DomainEmailNotification(currentUse, NotificationAction.UPDATED, edited_session);
+		emailservice.DomainEmailNotification(currentUser, NotificationAction.UPDATED, edited_session);
 		return ResponseEntity.ok(edited_session);
 	}
 
 	@GetMapping("/sessions/{id}")
 	ResponseEntity<?> getSession(@PathVariable Long id) throws UnauthorizedAccessException {
-		Person currentUser = personService.getCurrentUser();
+		Person currentUser = personService.getCurrentPersonByUsername();
 		Session session = sessionService.getSessionById(id);
 
 		if (session != null && !session.getProvider().getUsername().equals(currentUser.getUsername()))
@@ -74,7 +74,7 @@ public class ProviderController {
 
 	@DeleteMapping("/sessions/{id}")
 	ResponseEntity<?> deleteSession(@PathVariable Long id) {
-		Person currentUser = personService.getCurrentUser();
+		Person currentUser = personService.getCurrentPersonByUsername();
 		Session session = sessionService.getSessionById(id);
 		sessionService.removeSessionFromProvider(session.getId(), currentUser);
 		emailservice.DomainEmailNotification(currentUser, NotificationAction.DELETED, session);
@@ -83,13 +83,13 @@ public class ProviderController {
 
 	@GetMapping("/sessions/{id}/appointments")
 	ResponseEntity<?> getSessionAppointments(@PathVariable Long id) throws UnauthorizedAccessException {
-		Person currentUser = personService.getCurrentUser();
+		Person currentUser = personService.getCurrentPersonByUsername();
 		return ResponseEntity.ok(sessionService.getSessionAppointments(id, currentUser));
 	}
 
 	@GetMapping("/sessions/{id}/approved-appointment")
 	ResponseEntity<?> getSessionApprovedAppointment(@PathVariable Long id) throws UnauthorizedAccessException {
-		Person currentUser = personService.getCurrentUser();
+		Person currentUser = personService.getCurrentPersonByUsername();
 		Appointment appointment = appointmentService.getApprovedAppointment(id);
 		if(appointment != null &&
 				!currentUser.getUsername().equals(
