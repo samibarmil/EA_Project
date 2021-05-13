@@ -1,6 +1,7 @@
 package com.eaProject.demo.controller;
 
 import com.eaProject.demo.domain.*;
+import com.eaProject.demo.exceptions.UnprocessableEntityException;
 import com.eaProject.demo.repository.PersonRepository;
 import com.eaProject.demo.services.PersonDetailService;
 import com.eaProject.demo.services.PersonService;
@@ -56,16 +57,9 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody Person person) {
+    public ResponseEntity<?> signup(@RequestBody Person person) throws UnprocessableEntityException {
         PersonRole[] personRoles = new PersonRole[] {new PersonRole(Role.CLIENT)};
         person.setPersonRole(Arrays.asList(personRoles));
-        Person personWithId = null;
-        try {
-            personWithId = personService.addPerson(person);
-        } catch (Exception exception) {
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exception.getMessage());
-        }
-        personWithId.setPassword(null);
-        return ResponseEntity.ok(personWithId);
+        return ResponseEntity.ok(personService.addPerson(person));
     }
 }

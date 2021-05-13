@@ -28,13 +28,12 @@ public class AdminController {
 	private RoleService roleService;
 
 	@RequestMapping("/add-provider")
-	public ResponseEntity<?> addProvider(@RequestBody @Valid  Person person) throws UnprocessableEntityException {
+	public ResponseEntity<?> addProvider(@RequestBody Person person) throws UnprocessableEntityException {
 		PersonRole[] personRoles = new PersonRole[] { new PersonRole(Role.PROVIDER) };
 		person.setPersonRole(Arrays.asList(personRoles));
 		Person personWithId = null;
 		personWithId = personService.addPerson(person);
 		emailservice.DomainEmailNotification(person, NotificationAction.CREATED, personWithId);
-		personWithId.setPassword(null);
 		return ResponseEntity.ok(personWithId);
 	}
 
