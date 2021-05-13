@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
+import javax.validation.Valid;
 
 @Service
 public class PersonService {
@@ -27,7 +28,7 @@ public class PersonService {
     @Autowired
     PersonDetailService personDetailService;
 
-    public Person addPerson(Person person) throws UnprocessableEntityException {
+    public Person addPerson(@Valid Person person) throws UnprocessableEntityException {
         if (!isEmailUnique(person))
             throw new UnprocessableEntityException("Email must be unique.");
 
@@ -67,7 +68,7 @@ public class PersonService {
     	return personRepository.findAll();
     }
     
-    public Person updatePerson(Long id, Person person) throws UnprocessableEntityException {
+    public Person updatePerson(Long id, @Valid Person person) throws UnprocessableEntityException {
 
 		if(!id.equals(person.getId()))
 		    throw new UnprocessableEntityException("Person id dose not match.");

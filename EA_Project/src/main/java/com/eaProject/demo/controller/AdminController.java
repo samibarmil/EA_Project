@@ -28,7 +28,7 @@ public class AdminController {
 	private RoleService roleService;
 
 	@RequestMapping("/add-provider")
-	public ResponseEntity<?> addProvider(@RequestBody Person person) throws UnprocessableEntityException {
+	public ResponseEntity<?> addProvider(@RequestBody @Valid  Person person) throws UnprocessableEntityException {
 		PersonRole[] personRoles = new PersonRole[] { new PersonRole(Role.PROVIDER) };
 		person.setPersonRole(Arrays.asList(personRoles));
 		Person personWithId = null;
@@ -90,7 +90,7 @@ public class AdminController {
 
 	// todo: EDIT /sessions/{id}
 	@PutMapping("/sessions/{id}")
-	ResponseEntity<?> editSession(@RequestBody Session editSession, @PathVariable long id)
+	ResponseEntity<?> editSession(@RequestBody @Valid Session editSession, @PathVariable long id)
 			throws UnprocessableEntityException {
 		Session session = sessionService.getSessionById(id);
 		editSession.setProvider(session.getProvider());
@@ -102,7 +102,7 @@ public class AdminController {
 
 	// todo: ADD /sessions
 	@PostMapping(path = "/sessions", produces = "application/json")
-	ResponseEntity<?> addSession(@RequestBody Session session) {
+	ResponseEntity<?> addSession(@RequestBody @Valid Session session) {
 		Person currentUser = personService.getCurrentPersonByUsername();
 		session.setProvider(currentUser);
 		emailservice.DomainEmailNotification(currentUser, NotificationAction.CREATED, session);
@@ -162,7 +162,7 @@ public class AdminController {
 
 	// Todo: UPDATE /persons/{id}
 	@PutMapping("/persons/{id}")
-	public ResponseEntity<?> updatePerson(@PathVariable(value = "id")Long id, @RequestBody Person person)
+	public ResponseEntity<?> updatePerson(@PathVariable(value = "id")Long id, @Valid @RequestBody Person person)
 			throws UnprocessableEntityException {
 			Person p = personService.updatePerson(id, person);
 			Person currentUser = personService.getCurrentPersonByUsername();
@@ -174,6 +174,7 @@ public class AdminController {
     @PatchMapping("/appointments/{id}/approve")
     public ResponseEntity<?> approveAppointment(@PathVariable Long id) throws UnprocessableEntityException {
         Appointment appointment = appointmentService.getAppointment(id);
+        // Todo :  check if the session is past
         if(appointmentService.hasApprovedAppointment(appointment.getSession().getId())) {
            throw new UnprocessableEntityException("The session has approved appointment.");
         }

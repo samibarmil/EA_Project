@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,7 +42,7 @@ public class SessionService {
 	}
 
 	// Service for add Session
-	public Session addSession(Session session) {
+	public Session addSession(@Valid Session session) {
 		sessionRepository.save(session);
 		return session;
 	}
@@ -52,7 +53,7 @@ public class SessionService {
 	}
 
 	// Service for editing Session
-	public Session editSession(Long sessionId, Session updatedSession) throws UnprocessableEntityException {
+	public Session editSession(Long sessionId, @Valid Session updatedSession) throws UnprocessableEntityException {
 
 		if(!sessionId.equals(updatedSession.getId())) throw new UnprocessableEntityException("Session id dose not match.");
 

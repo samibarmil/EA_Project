@@ -9,6 +9,7 @@ import lombok.Data;
 import java.util.List;
 
 import javax.persistence.*;
+import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -44,14 +45,15 @@ public class Person {
 	private String password;
 	
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "provider")
-	private List<Session> sessions;  
-	
+	private List<Session> sessions;
+
+	@Valid
 	@Embedded
 	private Address address;
 	
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinColumn(name="person_id")
-	private List<PersonRole> personRole;
+	private List<PersonRole> personRole; // Todo: fix typo
 
 	public Person(String email, String firstName, String lastName, String username, String password) {
 		this.email = email;
