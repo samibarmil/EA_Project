@@ -139,24 +139,15 @@ public class AdminController {
 		return ResponseEntity.ok(appointmentService.getAppointment(id));
 	}
 
-	// Todo: UPDATE /appointments/{id}
-	@PutMapping("/appointments/{id}")
-	public ResponseEntity<?> update(@PathVariable(value = "id") Long id, @Valid @RequestBody Appointment appointment) {
-		Appointment currentAppointment = appointmentService.getAppointment(id);
-		appointment.getSession().setProvider(currentAppointment.getSession().getProvider());
-		Person currentUser = personService.getCurrentPersonByUsername();
-		emailservice.DomainEmailNotification(currentUser, NotificationAction.UPDATED, appointment);
-		return ResponseEntity.ok(appointmentService.updateFromAdmin(id, appointment));
-	}
-
 	// Todo: DELETE /appointments/{id}
 	@DeleteMapping("/appointments/{id}")
-	public void deleteAppointment(@RequestHeader(value = "User-Agent") String userAgent,
+	ResponseEntity<?> deleteAppointment(@RequestHeader(value = "User-Agent") String userAgent,
 			@PathVariable(name = "id") Long appointmentId) {
 		Appointment appointment = appointmentService.getAppointment(appointmentId);
 		appointmentService.deleteAppointment(appointment);
 		Person person = personService.getCurrentPersonByUsername();
-		emailservice.DomainEmailNotification(person, NotificationAction.DELETED, "");
+		emailservice.DomainEmailNotification(person, NotificationAction.DELETED, appointment);
+		return ResponseEntity.ok("Deleted appointment with id: " + appointmentId);
 	}
 
 	// Todo: GET /persons
